@@ -44,11 +44,13 @@ class ParticipantsList:
         for p in self.__participants_list:
             if p.get_name() == name:
                 return p
+        return None
 
     def get_participant_from_faceId(self, faceid):
         for p in self.__participants_list:
             if p.get_faceId() == faceid:
                 return p
+        return None
 
     def sort_by_points(self):
         self.__participants_list.sort(key=lambda e: e.get_points())

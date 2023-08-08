@@ -1,12 +1,12 @@
 import tkinter as tk
-
 from GUI_helper import *
 from PIL import ImageTk, Image
 import cv2
 
 
 class MainGUI:
-    def __init__(self):
+    def __init__(self, game_core):
+        self.__game_core = game_core
         self.__root = tk.Tk()
         self.__setup_root()
         self.__add_top_bar()
@@ -58,11 +58,10 @@ class MainGUI:
 
     def __capture_video(self):
         if self.__cam_activated and self.__video_capture:
-            tmp_frame = self.__video_capture.read()[1]
-            tmp_frame_rgb = cv2.cvtColor(tmp_frame, cv2.COLOR_BGR2RGB)
+            self.__last_frame = self.__video_capture.read()[1]
+            tmp_frame_rgb = cv2.cvtColor(self.__last_frame, cv2.COLOR_BGR2RGB)
 
             # Convert the frame to an image that tkinter can handle
-            self.__last_image = Image.fromarray(tmp_frame_rgb)
             image_to_display = Image.fromarray(tmp_frame_rgb)
 
             image_to_display.thumbnail((CAMERA_WIDTH, CAMERA_HEIGHT))
@@ -88,7 +87,7 @@ class MainGUI:
         self.__top_canvas.pack(fill=tk.BOTH)
         self.__WS_header = tk.Label(self.__root, text="Smile2Win", fg="white", bg=MAIN_WINDOW_COLOR,
                                     font=("Arial Bold", 45))
-        self.__WS_header.pack(pady=(200, 0))
+        self.__WS_header.pack(pady=(120, 30))
 
         self.__welcome_statement = "Hello!\n"
 
@@ -96,28 +95,30 @@ class MainGUI:
                                        font=("Arial", 25))
         self.__WS_statement.pack(pady=(30, 0))
 
-        self.__camera.place(x=(WINDOW_WIDTH-CAMERA_WIDTH)//2, y=840)
-        self.__root.after(7000, lambda: self.__update_welcome_statement())
+        self.__camera.configure(bg=MAIN_WINDOW_COLOR, highlightthickness=0)
+        self.__camera.place(x=(WINDOW_WIDTH - CAMERA_WIDTH) // 2, y=930)
+        self.__root.after(2500, lambda: self.__update_welcome_statement())
 
-    def __update_welcome_statement(self, scene=0):
+    def __update_welcome_statement(self, scene=3):
         if scene == 0:
             self.__welcome_statement = "Let's get to know you first! :)"
-            self.__root.after(4000, lambda: self.__update_welcome_statement(scene+1))
+            self.__root.after(4000, lambda: self.__update_welcome_statement(scene + 1))
         elif scene == 1:
             self.__welcome_statement = "I will ask for the name of each one of you.\n" \
                                        "When it's your turn, simply say your name out loud."
-            self.__root.after(8000, lambda: self.__update_welcome_statement(scene+1))
+            self.__root.after(8000, lambda: self.__update_welcome_statement(scene + 1))
         elif scene == 2:
             self.__welcome_statement = "In case you don't want to participate in the competition,\n" \
                                        "then you can declare that as well."
-            self.__root.after(8000, lambda: self.__update_welcome_statement(scene+1))
+            self.__root.after(8000, lambda: self.__update_welcome_statement(scene + 1))
+        elif scene == 3:
+            self.__game_core.extract_faces()
 
         self.__WS_statement.configure(text=self.__welcome_statement)
 
-
     def __show_game_screen(self):
         self.__left_canvas.pack(anchor=tk.W)
-        self.__camera.place(anchor=tk.NW, y=TOP_BAR_HEIGHT + 40, x=(LEFT_CANVAS_WIDTH - CAMERA_WIDTH - 8) // 2)
+        self.__camera.place(anchor=tk.NW, y=TOP_BAR_HEIGHT + 40, x=(LEFT_CANVAS_WIDTH - CAMERA_WIDTH) // 2)
         self.__question_title.place(x=LEFT_CANVAS_WIDTH + 60, y=TOP_BAR_HEIGHT + 30)
         self.__question_text.place(x=LEFT_CANVAS_WIDTH + 60, y=TOP_BAR_HEIGHT + 170)
 
@@ -125,6 +126,57 @@ class MainGUI:
         self.__root.mainloop()
 
     def take_shot(self):
-        return self.__last_image
+        return self.__last_frame
 
+    def names_setup(self):
+        self.__WS_statement.destroy()
+        self.__face_setup_canvas = tk.Canvas(self.__root, height=200, width=330, bg="#2a3966", highlightthickness=3)
+        self.__face_setup_canvas.pack()
+        self.__face_img = tk.Label(self.__root, highlightcolor="#2a3966", bg="#2a3966")
 
+        self.__participant_name = tk.Label(self.__root, font=("Arial Rounded MT Bold", 30), text="",
+                                           bg=MAIN_WINDOW_COLOR, fg="white")
+
+        tmp_image = Image.open("recording_mic.png")
+        self.__mic_icon_img = ImageTk.PhotoImage(tmp_image)
+        self.__mic_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__mic_icon_img,
+                                                                   state="hidden")
+
+        tmp_image_2 = Image.open("v_icon.png")
+        self.__done_icon_img = ImageTk.PhotoImage(tmp_image_2)
+        self.__done_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__done_icon_img,
+                                                                    state="hidden")
+
+        x_cord = (WINDOW_WIDTH - 170) // 2 - 35
+        y_cord = 390
+        self.__face_img.place(x=x_cord, y=y_cord)
+        self.__participant_name.pack(pady=(50, 0))
+
+    def display_face(self, face_img):
+        tmp_frame_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+
+        # Convert the frame to an image that tkinter can handle
+        image_to_display = Image.fromarray(tmp_frame_rgb)
+        image_to_display.thumbnail((170, 170))
+
+        # Create a PhotoImage and update the tkinter label with the new image
+        img_tk = ImageTk.PhotoImage(image=image_to_display)
+
+        self.__face_img.config(image=img_tk)
+        self.__face_img.image = img_tk
+
+    def set_spoken_name(self, spoken_name):
+        self.__participant_name.configure(text=spoken_name)
+
+    def start_listening(self, toggle):
+        if toggle == 0:
+            self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
+            self.__face_setup_canvas.itemconfigure(self.__done_icon_id, state='hidden')
+            self.__face_setup_canvas.configure(highlightbackground="white")
+        elif toggle == 1:
+            self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='normal')
+            self.__face_setup_canvas.configure(highlightbackground="red")
+        elif toggle == 2:
+            self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
+            self.__face_setup_canvas.configure(highlightbackground="#32db2c")
+            self.__face_setup_canvas.itemconfigure(self.__done_icon_id, state='normal')
