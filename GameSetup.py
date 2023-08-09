@@ -13,7 +13,7 @@ FACE_API_KEY = "yNWSb95IUYlnLzblhfecvm65SOc8VepG"
 FACE_SECRET_KEY = "shaBPQFkk76YZzs57DhGuNDFWo0NmwR7"
 
 
-class RegisterParticipants:
+class GameSetup:
     def __init__(self, game_core):
         self.__game_core = game_core
         self.__found = 0
@@ -25,6 +25,10 @@ class RegisterParticipants:
         buffer = cv2.imencode('.jpg', img)[1]
         base64_img = base64.b64encode(buffer).decode("utf-8")
         result = detect_faces(FACE_API_KEY, FACE_SECRET_KEY, base64_img)
+
+        # Check if there are at least two persons
+        if len(result['faces']) < self.__game_core.minimum_participants:
+            return False
 
         # Process the results
         for face in result['faces']:
@@ -40,6 +44,7 @@ class RegisterParticipants:
 
             add_face_to_set(FACE_API_KEY, FACE_SECRET_KEY, self.__faceset_token, face['face_token'])
             self.__game_core.add_participant_to_game(face['face_token'], face_img)
+        return True
 
     def ask_for_names(self):
         p = self.__game_core.participants.get_participant_from_name(None)
@@ -61,17 +66,28 @@ class RegisterParticipants:
                 recognized_text = result[1]
                 print(recognized_text)
                 parsed_name = parse_name_from_text(recognized_text)
-                if parsed_name is None:
+                if parsed_name == (False, 1):  # The bot couldn't determine a case.
                     self.__game_core.set_spoken_name("Please say your name again! :)")
                     continue
-                print(parsed_name)
-                p.set_name(parsed_name)
-                self.__game_core.set_spoken_name(parsed_name)
-                self.__game_core.show_mic_icon(2)
+                elif parsed_name == (False, 0):  # The user states that he doesn't wanna participate.
+                    self.__game_core.set_spoken_name("Not participating :(")
+                    self.__game_core.participants.remove_participant(p)
+                else:
+                    parsed_name = parsed_name[1]
+                    self.__game_core.set_spoken_name(parsed_name)
+                    print(parsed_name)
+                    p.set_name(parsed_name)
+                    self.__game_core.show_mic_icon(2)
+                    count += 1
                 p = self.__game_core.participants.get_participant_from_name(None)
-                count += 1
                 first_time = True
                 time.sleep(3)
+
+        if count < self.__game_core.minimum_participants:  # The game can't start with less than one participant.
+            # remove all participants
+            self.__game_core.set_spoken_name("Not enough participants\nStart the game when ready! :)")
+            return False
+        return True
 
 
 # Helper function to parse faces

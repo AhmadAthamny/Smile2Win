@@ -97,22 +97,25 @@ class MainGUI:
 
         self.__camera.configure(bg=MAIN_WINDOW_COLOR, highlightthickness=0)
         self.__camera.place(x=(WINDOW_WIDTH - CAMERA_WIDTH) // 2, y=930)
-        self.__root.after(2500, lambda: self.__update_welcome_statement())
+        self.__root.after(2500, lambda: self.update_welcome_statement())
 
-    def __update_welcome_statement(self, scene=3):
+
+    def update_welcome_statement(self, scene=0):
         if scene == 0:
             self.__welcome_statement = "Let's get to know you first! :)"
-            self.__root.after(4000, lambda: self.__update_welcome_statement(scene + 1))
+            self.__root.after(4000, lambda: self.update_welcome_statement(scene + 1))
         elif scene == 1:
             self.__welcome_statement = "I will ask for the name of each one of you.\n" \
                                        "When it's your turn, simply say your name out loud."
-            self.__root.after(8000, lambda: self.__update_welcome_statement(scene + 1))
+            self.__root.after(8000, lambda: self.update_welcome_statement(scene + 1))
         elif scene == 2:
             self.__welcome_statement = "In case you don't want to participate in the competition,\n" \
                                        "then you can declare that as well."
-            self.__root.after(8000, lambda: self.__update_welcome_statement(scene + 1))
+            self.__root.after(8000, lambda: self.update_welcome_statement(scene + 1))
         elif scene == 3:
             self.__game_core.extract_faces()
+        elif scene == 4:
+            self.__welcome_statement = "Waiting for at least two persons to be present .."
 
         self.__WS_statement.configure(text=self.__welcome_statement)
 
@@ -124,6 +127,9 @@ class MainGUI:
 
     def start_gui(self):
         self.__root.mainloop()
+
+    def stop_gui(self):
+        self.__root.quit()
 
     def take_shot(self):
         return self.__last_frame

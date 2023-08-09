@@ -1,15 +1,16 @@
 import threading
 from GUI import MainGUI
 from Participant import Participant, ParticipantsList
-from RegisterParticipants import *
+from GameSetup import *
 
 
 class GameCore:
-    def __init__(self):
+    def __init__(self, min_participants):
         self.__Main_GUI = MainGUI(self)
         self.participants = ParticipantsList()
-        self.__register_participants = RegisterParticipants(self)
+        self.__game_setup = GameSetup(self)
         self.__participant_count = 0
+        self.minimum_participants = min_participants
 
     def start_game(self):
         self.__Main_GUI.show_welcome_screen()
@@ -20,10 +21,17 @@ class GameCore:
         self.extracting_thread.start()
 
     def extract_faces_job(self):
-        img = self.__Main_GUI.take_shot()
-        self.__register_participants.extract_faces(img)
+        while True:
+            img = self.__Main_GUI.take_shot()
+            if self.__game_setup.extract_faces(img):
+                break
+            self.__Main_GUI.update_welcome_statement(4)
+            time.sleep(10)
+
         self.__Main_GUI.names_setup()
-        self.__register_participants.ask_for_names()
+        if not self.__game_setup.ask_for_names():
+            time.sleep(6)
+            self.__Main_GUI.stop_gui()
 
     def display_face(self, img):
         self.__Main_GUI.display_face(img)
@@ -41,10 +49,11 @@ class GameCore:
         self.participants.add_participant(new_participant)
         self.__participant_count += 1
 
+
     def participants_count(self):
         return self.__participant_count
 
 
 if __name__ == '__main__':
-    Core = GameCore()
+    Core = GameCore(2)
     Core.start_game()

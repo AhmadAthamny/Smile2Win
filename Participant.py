@@ -54,3 +54,9 @@ class ParticipantsList:
 
     def sort_by_points(self):
         self.__participants_list.sort(key=lambda e: e.get_points())
+
+    def remove_participant(self, participant):
+        self.__participants_list.remove(participant)
+
+    def remove_all_participants(self):
+        self.__participants_list = []
