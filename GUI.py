@@ -143,12 +143,12 @@ class MainGUI:
         self.__participant_name = tk.Label(self.__root, font=("Arial Rounded MT Bold", 30), text="",
                                            bg=MAIN_WINDOW_COLOR, fg="white")
 
-        tmp_image = Image.open("recording_mic.png")
+        tmp_image = Image.open("Resources/recording_mic.png")
         self.__mic_icon_img = ImageTk.PhotoImage(tmp_image)
         self.__mic_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__mic_icon_img,
                                                                    state="hidden")
 
-        tmp_image_2 = Image.open("v_icon.png")
+        tmp_image_2 = Image.open("Resources/v_icon.png")
         self.__done_icon_img = ImageTk.PhotoImage(tmp_image_2)
         self.__done_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__done_icon_img,
                                                                     state="hidden")
