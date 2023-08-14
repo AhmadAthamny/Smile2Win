@@ -1,4 +1,3 @@
-import string
 import threading
 from GUI import MainGUI
 from Participant import Participant, ParticipantsList
@@ -34,13 +33,13 @@ class GameCore:
 
             time.sleep(5)
 
-            self.__Main_GUI.names_setup()
+        self.__Main_GUI.names_setup()
 
-            # Check if the number of the persons who are participating (who chose to play) is
-            # more than the minimum number that was set.
-            if not self.__game_setup.ask_for_names():
-                # If the number of participants is less than the minimum, then we wait 6 seconds then stop the game.
-                time.sleep(6)
+        # Check if the number of the persons who are participating (who chose to play) is
+        # more than the minimum number that was set.
+        if not self.__game_setup.ask_for_names():
+            # If the number of participants is less than the minimum, then we wait 6 seconds then stop the game.
+            time.sleep(6)
 
             # Stop the GUI.
             self.__Main_GUI.stop_gui()
