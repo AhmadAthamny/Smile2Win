@@ -46,6 +46,7 @@ class MainGUI:
         self.__camera = tk.Label(self.__root, image=self.__img, highlightthickness=4)
 
     def activate_camera(self):
+        # Starts capturing and remembers the last displayed frame (frame updates every 0.1 second)
         self.__video_capture = cv2.VideoCapture(0)
         self.__video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
         self.__video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
@@ -53,10 +54,12 @@ class MainGUI:
         self.__root.after(1000, lambda: self.__capture_video())
 
     def deactivate_camera(self):
+        # Stops capturing camerae.
         self.__video_capture = None
         self.__cam_activated = False
 
     def __capture_video(self):
+        # Update the GUI with the camera capture
         if self.__cam_activated and self.__video_capture:
             self.__last_frame = self.__video_capture.read()[1]
             tmp_frame_rgb = cv2.cvtColor(self.__last_frame, cv2.COLOR_BGR2RGB)
@@ -99,8 +102,7 @@ class MainGUI:
         self.__camera.place(x=(WINDOW_WIDTH - CAMERA_WIDTH) // 2, y=930)
         self.__root.after(2500, lambda: self.update_welcome_statement())
 
-
-    def update_welcome_statement(self, scene=0):
+    def update_welcome_statement(self, scene=0, txt=None):
         if scene == 0:
             self.__welcome_statement = "Let's get to know you first! :)"
             self.__root.after(4000, lambda: self.update_welcome_statement(scene + 1))
@@ -114,8 +116,8 @@ class MainGUI:
             self.__root.after(8000, lambda: self.update_welcome_statement(scene + 1))
         elif scene == 3:
             self.__game_core.extract_faces()
-        elif scene == 4:
-            self.__welcome_statement = "Waiting for at least two persons to be present .."
+        elif txt:
+            self.__welcome_statement = txt
 
         self.__WS_statement.configure(text=self.__welcome_statement)
 
@@ -175,13 +177,18 @@ class MainGUI:
         self.__participant_name.configure(text=spoken_name)
 
     def start_listening(self, toggle):
+        # Show user's face only with white frame.
         if toggle == 0:
             self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
             self.__face_setup_canvas.itemconfigure(self.__done_icon_id, state='hidden')
             self.__face_setup_canvas.configure(highlightbackground="white")
+
+        # Recognizing user's speech, red frame with orange mic icon displayed on the screen.
         elif toggle == 1:
             self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='normal')
             self.__face_setup_canvas.configure(highlightbackground="red")
+
+        # Green frame, with a green v-symbol.
         elif toggle == 2:
             self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
             self.__face_setup_canvas.configure(highlightbackground="#32db2c")
