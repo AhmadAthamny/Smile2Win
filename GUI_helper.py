@@ -34,7 +34,7 @@ LEFT_CANVAS_HEIGHT = 1250
 CAMERA_HEIGHT = 315
 CAMERA_WIDTH = 560
 
-LINE_MAX_CHARS = 37
+LINE_MAX_CHARS = 35
 
 CAPTURE_WIDTH = 1280
 CAPTURE_HEIGHT = 720
@@ -60,6 +60,8 @@ def break_str(text, max_chars):
 
         if current_words > 0:
             final += " "
+            current_len += 1
+
         final += words[i]
         current_len += len(words[i])
         current_words += 1
