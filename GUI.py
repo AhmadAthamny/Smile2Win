@@ -33,6 +33,12 @@ class MainGUI:
                                       anchor=tk.W)
         self.__top_canvas.create_text(2000, 40, text="X", fill="#204691", font=("Arial Bold", 20, "bold"), anchor=tk.E)
 
+        self.__top_canvas.bind("<Button 1>", lambda event_args: self.__check_click(event_args.x, event_args.y))
+
+    def __check_click(self, x, y):
+        if 1970 <= x <= 2030 and 10 <= y <= 70:
+            self.stop_gui()
+
     def __add_left_canvas(self):
         self.__left_canvas = tk.Canvas(self.__root, bg=LEFT_CANVAS_COLOR, height=LEFT_CANVAS_HEIGHT,
                                        width=LEFT_CANVAS_WIDTH,
@@ -80,7 +86,7 @@ class MainGUI:
         self.__question_title = tk.Label(self.__root, text="Question", fg="white", bg=MAIN_WINDOW_COLOR,
                                          font=("Arial Bold", 40))
 
-        self.question_str = "The quick brown fox jumps over the "
+        self.question_str = "The quick brown fox jumps over the lazy dog because he is an idiotc lazy. Why he's lazy? WHYY?"
         self.__question_text = tk.Label(self.__root, text=break_str(self.question_str, LINE_MAX_CHARS), fg="white",
                                         bg=MAIN_WINDOW_COLOR,
                                         font=("Coolvetica", 28), anchor=tk.W, justify="left")
@@ -102,7 +108,7 @@ class MainGUI:
         self.__camera.place(x=(WINDOW_WIDTH - CAMERA_WIDTH) // 2, y=930)
         self.__root.after(2500, lambda: self.update_welcome_statement())
 
-    def update_welcome_statement(self, scene=0, txt=None):
+    def update_welcome_statement(self, scene=3, txt=None):
         if scene == 0:
             self.__welcome_statement = "Let's get to know you first! :)"
             self.__root.after(4000, lambda: self.update_welcome_statement(scene + 1))
@@ -131,7 +137,7 @@ class MainGUI:
         self.__root.mainloop()
 
     def stop_gui(self):
-        self.__root.quit()
+        exit()
 
     def take_shot(self):
         return self.__last_frame
@@ -193,3 +199,10 @@ class MainGUI:
             self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
             self.__face_setup_canvas.configure(highlightbackground="#32db2c")
             self.__face_setup_canvas.itemconfigure(self.__done_icon_id, state='normal')
+
+    def end_names_setup(self):
+        self.__face_setup_canvas.destroy()
+        self.__WS_header.destroy()
+        self.__participant_name.destroy()
+        self.__face_img.destroy()
+        self.__show_game_screen()
