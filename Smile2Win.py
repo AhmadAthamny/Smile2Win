@@ -44,6 +44,12 @@ class GameCore:
             # Stop the GUI.
             self.__Main_GUI.stop_gui()
 
+        # If name collecting was successful, we then need to know what's the game concept:
+        self.__Main_GUI.end_names_setup()
+
+
+
+
     # This function is used by the GameSetup module.
     def display_face(self, img):
         self.__Main_GUI.display_face(img)
@@ -71,5 +77,5 @@ class GameCore:
 
 
 if __name__ == '__main__':
-    Core = GameCore(2)
+    Core = GameCore(1)
     Core.start_game()
