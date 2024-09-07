@@ -55,7 +55,7 @@ class GameSetup:
         self.__game_core.show_mic_icon()
         self.__game_core.recognize_speech()
         while not self.__game_core.recognizing_finished():
-            time.sleep(1)
+            time.sleep(10)
 
         self.__game_core.show_mic_icon(False)
 
