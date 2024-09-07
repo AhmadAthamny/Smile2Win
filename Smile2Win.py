@@ -3,7 +3,6 @@ from GUI import MainGUI
 from Participant import Participant, ParticipantsList
 from GameSetup import *
 from speech_text import SpeechTexter
-from face_recognition import faceRecognition
 
 
 class GameCore:
