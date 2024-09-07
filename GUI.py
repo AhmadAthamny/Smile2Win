@@ -46,7 +46,7 @@ class MainGUI:
         self.__add_camera()
 
     def __add_camera(self):
-        tmp_image = Image.open("the_image.png")
+        tmp_image = Image.open("Resources/background.png")
         tmp_image = tmp_image.resize((CAMERA_WIDTH, CAMERA_HEIGHT))
         self.__img = ImageTk.PhotoImage(tmp_image)
         self.__camera = tk.Label(self.__root, image=self.__img, highlightthickness=4)
@@ -86,7 +86,7 @@ class MainGUI:
         self.__question_title = tk.Label(self.__root, text="Question", fg="white", bg=MAIN_WINDOW_COLOR,
                                          font=("Arial Bold", 40))
 
-        self.question_str = "The quick brown fox jumps over the lazy dog because he is an idiotc lazy. Why he's lazy? WHYY?"
+        self.question_str = "The game's concept should be said in this phase."
         self.__question_text = tk.Label(self.__root, text=break_str(self.question_str, LINE_MAX_CHARS), fg="white",
                                         bg=MAIN_WINDOW_COLOR,
                                         font=("Coolvetica", 28), anchor=tk.W, justify="left")
@@ -108,20 +108,19 @@ class MainGUI:
         self.__camera.place(x=(WINDOW_WIDTH - CAMERA_WIDTH) // 2, y=930)
         self.__root.after(2500, lambda: self.update_welcome_statement())
 
-    def update_welcome_statement(self, scene=3, txt=None):
+    def update_welcome_statement(self, scene=0, txt=None):
         if scene == 0:
             self.__welcome_statement = "Let's get to know you first! :)"
-            self.__root.after(4000, lambda: self.update_welcome_statement(scene + 1))
+            self.__root.after(2500, lambda: self.update_welcome_statement(scene + 1))
+
         elif scene == 1:
-            self.__welcome_statement = "I will ask for the name of each one of you.\n" \
-                                       "When it's your turn, simply say your name out loud."
-            self.__root.after(8000, lambda: self.update_welcome_statement(scene + 1))
+            self.__welcome_statement = "We are taking a picture for you\n" \
+                                       "Look at the camera with a smile! :)"
+            self.__root.after(2500, lambda: self.update_welcome_statement(scene + 1))
+
         elif scene == 2:
-            self.__welcome_statement = "In case you don't want to participate in the competition,\n" \
-                                       "then you can declare that as well."
-            self.__root.after(8000, lambda: self.update_welcome_statement(scene + 1))
-        elif scene == 3:
             self.__game_core.extract_faces()
+
         elif txt:
             self.__welcome_statement = txt
 
