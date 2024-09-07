@@ -44,7 +44,7 @@ def findNextTurn(source_image, players_encodings, max_hands):
 
     # If hands found
     if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hands_landmarks:
+        for hand_landmarks in results.multi_hand_landmarks:
             if is_open_palm(hand_landmarks, max_hands):
                 hand_center = (hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x, 
                     hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y)
