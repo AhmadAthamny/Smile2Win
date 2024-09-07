@@ -68,7 +68,7 @@ def findNextTurn(source_image, players_encodings, max_hands):
                 # If a face is close enough, check if we know it.
                 if closest_face_index != -1:
                     found_face = findFaceFromCollection(players_encodings, current_encodings[closest_face_index])
-                    if found_face:
+                    if found_face != -1:
                         faces_with_hand.append(found_face)
                 
     return faces_with_hand
