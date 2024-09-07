@@ -2,12 +2,16 @@ import threading
 from GUI import MainGUI
 from Participant import Participant, ParticipantsList
 from GameSetup import *
+from speech_text import SpeechTexter
+from face_recognition import faceRecognition
 
 
 class GameCore:
     def __init__(self, min_participants):
         self.__Main_GUI = MainGUI(self)
         self.participants = ParticipantsList()
+        self.__speech_recognizer = SpeechTexter()
+        self.face_recognizer = faceRecognition()
         self.__game_setup = GameSetup(self)
         self.__participant_count = 0
         self.minimum_participants = min_participants
@@ -21,7 +25,7 @@ class GameCore:
         self.extracting_thread.start()
 
     def extract_faces_job(self):
-
+        self.face_recognizer.create_face_set()
         # We keep taking shots of the camera, until there are enough people in front of it.
         while True:
             img = self.__Main_GUI.take_shot()
@@ -74,6 +78,15 @@ class GameCore:
     # Returns the count of the participants we have in the game.
     def participants_count(self):
         return self.__participant_count
+
+    def recognize_speech(self):
+        self.__speech_recognizer.run_recognizer()
+
+    def recognizing_finished(self):
+        return not self.__speech_recognizer.is_recognizing()
+
+    def recognized_text(self):
+        return self.__speech_recognizer.recognized_text()
 
 
 if __name__ == '__main__':
