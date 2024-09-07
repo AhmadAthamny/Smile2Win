@@ -53,7 +53,7 @@ class MainGUI:
 
     def activate_camera(self):
         # Starts capturing and remembers the last displayed frame (frame updates every 0.1 second)
-        self.__video_capture = cv2.VideoCapture(0)
+        self.__video_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.__video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
         self.__video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
         self.__cam_activated = True
