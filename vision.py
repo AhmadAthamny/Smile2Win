@@ -3,118 +3,136 @@ import mediapipe as mp
 import cv2
 import numpy as np
 
+class Vision:
+    def __init__(self, max_hands, min_detection_confidence=0.7):
+        """
+        Initialize the Vision system with MediaPipe Hands for hand detection and
+        other related settings.
+        """
+        self.max_hands = max_hands
+        self.hands = mp.solutions.hands.Hands(max_num_hands=max_hands, min_detection_confidence=min_detection_confidence)
 
-# Initialize mp library detection
-mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(max_num_hands=max_hands, min_detection_confidence=0.7)
+    def extract_faces(self, source_image):
+        """
+        Given a source image, extract face locations and their encodings.
+        """
+        rgb_image = source_image[:, :, ::-1]  # Convert BGR to RGB for face_recognition
 
-def extractFaces(source_image):
-    """
-    Given a source image, it parses faces, return faces locations and their encodings.
-    """
-    extracted_faces = []
-    rgb_image = source_image[:, :, ::-1]
+        # Detect face locations and their encodings
+        face_locations = face_recognition.face_locations(rgb_image)
+        current_encodings = face_recognition.face_encodings(rgb_image, face_locations)
 
-    # Detect face locations in the frame
-    face_locations = face_recognition.face_locations(rgb_image)
-    current_encodings = face_recognition.face_encodings(rgb_image, face_locations)
+        # Extract face images using the face locations
+        face_images = []
+        for (top, right, bottom, left) in face_locations:
+            # Extract the face from the original image
+            face_image = source_image[top:bottom, left:right]
+            face_images.append(face_image)  # Append the cropped face image to the list
 
-    return face_locations, current_encodings
+        return face_locations, current_encodings, face_images
 
-def findFaceFromCollection(collection_encodings, target_encoding):
-    matches = face_recognition.compare_faces(collection_encodings, target_encoding)
+    def __find_face_from_collection(self, collection_encodings, target_encoding):
+        """
+        Compare a target face encoding against a collection of known encodings.
+        Returns the index of the matching face or -1 if no match is found.
+        """
+        matches = face_recognition.compare_faces(collection_encodings, target_encoding)
 
-    # Looping over matches:
-    for i, match in enumerate(matches):
-        if match:
-            return i
-    return -1
+        for i, match in enumerate(matches):
+            if match:
+                return i
+        return -1  # No match found
 
-def findNextTurn(source_image, players_encodings, max_hands):
-    frame = cv2.flip(source_image, 1)
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    def __is_open_palm(self, hand_landmarks):
+        """
+        Check if the detected hand is an open palm.
+        """
+        finger_tips = [mp.solutions.hands.HandLandmark.INDEX_FINGER_TIP,
+                       mp.solutions.hands.HandLandmark.MIDDLE_FINGER_TIP,
+                       mp.solutions.hands.HandLandmark.RING_FINGER_TIP,
+                       mp.solutions.hands.HandLandmark.PINKY_TIP]
 
-    face_locations, current_encodings = extractFaces(source_image)
+        finger_bases = [mp.solutions.hands.HandLandmark.INDEX_FINGER_MCP,
+                        mp.solutions.hands.HandLandmark.MIDDLE_FINGER_MCP,
+                        mp.solutions.hands.HandLandmark.RING_FINGER_MCP,
+                        mp.solutions.hands.HandLandmark.PINKY_MCP]
 
-    # Process the image to detect hands
-    results = hands.process(rgb_frame)
+        wrist = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST]
+        is_open = True
 
-    # Holds array for all faces that have a hand raised.
-    faces_with_hand = []
+        # Check if fingers are extended
+        for i in range(len(finger_tips)):
+            tip = hand_landmarks.landmark[finger_tips[i]]
+            base = hand_landmarks.landmark[finger_bases[i]]
+            tip_base_distance = np.sqrt((tip.x - wrist.x)**2 + (tip.y - wrist.y)**2)
+            if tip_base_distance < 0.1:
+                is_open = False
+                break
 
-    # If hands found
-    if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
-            if is_open_palm(hand_landmarks, max_hands):
-                hand_center = (hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x, 
-                    hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y)
+        # Check if fingers are spread
+        if is_open:
+            index_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.INDEX_FINGER_TIP]
+            middle_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.MIDDLE_FINGER_TIP]
+            ring_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.RING_FINGER_TIP]
+            pinky_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.PINKY_TIP]
 
-                closest_face_index = -1
-                min_distance = float('inf')
+            if (np.linalg.norm(np.array([index_tip.x, index_tip.y]) - np.array([middle_tip.x, middle_tip.y])) < 0.05 or
+                np.linalg.norm(np.array([middle_tip.x, middle_tip.y]) - np.array([ring_tip.x, ring_tip.y])) < 0.05 or
+                np.linalg.norm(np.array([ring_tip.x, ring_tip.y]) - np.array([pinky_tip.x, pinky_tip.y])) < 0.05):
+                is_open = False
 
-                # Loop over detected faces and compare proximity to the hand
-                for i, (top, right, bottom, left) in enumerate(face_locations):
-                    # Calculate the center of the face
-                    face_center = ((left + right) / 2, (top + bottom) / 2)
+        return is_open
 
-                    # Calculate the distance between the hand center and the face center
-                    distance = calculate_distance(hand_center, face_center)
+    def __calculate_distance(self, point1, point2):
+        """
+        Calculate Euclidean distance between two points.
+        """
+        return np.linalg.norm(np.array(point1) - np.array(point2))
 
-                    # Keep track of the closest face
-                    if distance < min_distance:
-                        min_distance = distance
-                        closest_face_index = i
+    def find_next_turn(self, source_image, players_encodings):
+        """
+        Given a source image, find which player raised their hand first by detecting
+        hand positions and matching faces.
+        """
+        frame = cv2.flip(source_image, 1)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                # If a face is close enough, check if we know it.
-                if closest_face_index != -1:
-                    found_face = findFaceFromCollection(players_encodings, current_encodings[closest_face_index])
-                    if found_face != -1:
-                        faces_with_hand.append(found_face)
-                
-    return faces_with_hand
+        # Extract faces from the image
+        face_locations, current_encodings = self.extract_faces(source_image)
 
-def is_open_palm(hand_landmarks, max_hands):
-    # Indices for finger tips and their corresponding base joints
-    finger_tips = [mp_hands.HandLandmark.INDEX_FINGER_TIP,
-                   mp_hands.HandLandmark.MIDDLE_FINGER_TIP,
-                   mp_hands.HandLandmark.RING_FINGER_TIP,
-                   mp_hands.HandLandmark.PINKY_TIP]
+        # Process the image to detect hands
+        results = self.hands.process(rgb_frame)
 
-    finger_bases = [mp_hands.HandLandmark.INDEX_FINGER_MCP,
-                    mp_hands.HandLandmark.MIDDLE_FINGER_MCP,
-                    mp_hands.HandLandmark.RING_FINGER_MCP,
-                    mp_hands.HandLandmark.PINKY_MCP]
+        # List of faces with hands raised
+        faces_with_hand = []
 
-    # Wrist landmark
-    wrist = hand_landmarks.landmark[mp_hands.HandLandmark.WRIST]
+        # If hands are found
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                if self.__is_open_palm(hand_landmarks):
+                    hand_center = (hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].x,
+                                   hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].y)
 
-    # Calculate distances between finger tips and the base of the hand
-    is_open = True
-    for i in range(len(finger_tips)):
-        tip = hand_landmarks.landmark[finger_tips[i]]
-        base = hand_landmarks.landmark[finger_bases[i]]
+                    closest_face_index = -1
+                    min_distance = float('inf')
 
-        # Calculate Euclidean distance between finger tips and the base
-        tip_base_distance = np.sqrt((tip.x - wrist.x)**2 + (tip.y - wrist.y)**2)
-        if tip_base_distance < 0.1:  # Check if the distance is too small (fingers not extended)
-            is_open = False
-            break
+                    # Loop over detected faces and compare proximity to the hand
+                    for i, (top, right, bottom, left) in enumerate(face_locations):
+                        # Calculate the center of the face
+                        face_center = ((left + right) / 2, (top + bottom) / 2)
 
-    # Additional condition: Check if the fingers are spread (distance between adjacent fingers)
-    if is_open:
-        index_tip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
-        middle_tip = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP]
-        ring_tip = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP]
-        pinky_tip = hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP]
+                        # Calculate the distance between the hand center and the face center
+                        distance = self.__calculate_distance(hand_center, face_center)
 
-        # Finger spread condition (fingers should not overlap or be too close)
-        if (np.linalg.norm(np.array([index_tip.x, index_tip.y]) - np.array([middle_tip.x, middle_tip.y])) < 0.05 or
-            np.linalg.norm(np.array([middle_tip.x, middle_tip.y]) - np.array([ring_tip.x, ring_tip.y])) < 0.05 or
-            np.linalg.norm(np.array([ring_tip.x, ring_tip.y]) - np.array([pinky_tip.x, pinky_tip.y])) < 0.05):
-            is_open = False
+                        # Track the closest face to the hand
+                        if distance < min_distance:
+                            min_distance = distance
+                            closest_face_index = i
 
-    return is_open
+                    # If a face is close enough, check if we know it.
+                    if closest_face_index != -1:
+                        found_face = self.__find_face_from_collection(players_encodings, current_encodings[closest_face_index])
+                        if found_face != -1:
+                            faces_with_hand.append(found_face)
 
-# Function to calculate the distance between two points
-def calculate_distance(point1, point2):
-    return np.linalg.norm(np.array(point1) - np.array(point2))
+        return faces_with_hand
