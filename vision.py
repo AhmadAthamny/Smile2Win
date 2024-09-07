@@ -1,6 +1,12 @@
 import face_recognition
 import mediapipe as mp
 import cv2
+import numpy as np
+
+
+# Initialize mp library detection
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(max_num_hands=max_hands, min_detection_confidence=0.7)
 
 def extractFaces(source_image):
     """
@@ -16,18 +22,18 @@ def extractFaces(source_image):
     return face_locations, current_encodings
 
 def findFaceFromCollection(collection_encodings, target_encoding):
-    for encoding in collection_encodings:
-        # Compare current encoding with target_encoding
-        match = face_recognition.compare_faces()
+    matches = face_recognition.compare_faces(collection_encodings, target_encoding)
 
-def findNextTurn(source_image, current_encodings, max_hands):
+    # Looping over matches:
+    for i, match in enumerate(matches):
+        if match:
+            return i
+    return None
 
+def findNextTurn(source_image, players_encodings, max_hands):
     frame = cv2.flip(source_image, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # Initialize mp library detection
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(max_num_hands=max_hands, min_detection_confidence=0.7)
     face_locations, current_encodings = extractFaces(source_image)
 
     # Process the image to detect hands
@@ -39,25 +45,35 @@ def findNextTurn(source_image, current_encodings, max_hands):
     # If hands found
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hands_landmarks:
-            # Compute the palm center as the average of these points
-            palm_x = (wrist.x + index_finger_mcp.x + pinky_mcp.x) / 3
-            palm_y = (wrist.y + index_finger_mcp.y + pinky_mcp.y) / 3
+            if is_open_palm(hand_landmarks, max_hands):
+                hand_center = (hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x, 
+                    hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y)
 
-            # Get pixel coordinates (since landmarks are normalized to [0, 1])
-            h, w, _ = frame.shape
-            palm_center_pixel = (int(palm_x * w), int(palm_y * h))
+                closest_face_index = -1
+                min_distance = float('inf')
 
-            # Now, check distance from closest head.
-            for face_location in face_locations:
+                # Loop over detected faces and compare proximity to the hand
+                for i, (top, right, bottom, left) in enumerate(face_locations):
+                    # Calculate the center of the face
+                    face_center = ((left + right) / 2, (top + bottom) / 2)
 
-            
-    else:
-        # No gestures found
-        return False
+                    # Calculate the distance between the hand center and the face center
+                    distance = calculate_distance(hand_center, face_center)
 
+                    # Keep track of the closest face
+                    if distance < min_distance:
+                        min_distance = distance
+                        closest_face_index = i
 
+                # If a face is close enough, check if we know it.
+                if closest_face_index != -1:
+                    found_face = findFaceFromCollection(players_encodings, current_encodings[closest_face_index])
+                    if found_face:
+                        faces_with_hand.append(found_face)
+                
+    return faces_with_hand
 
-def is_open_palm(hand_landmarks):
+def is_open_palm(hand_landmarks, max_hands):
     # Indices for finger tips and their corresponding base joints
     finger_tips = [mp_hands.HandLandmark.INDEX_FINGER_TIP,
                    mp_hands.HandLandmark.MIDDLE_FINGER_TIP,
@@ -98,3 +114,7 @@ def is_open_palm(hand_landmarks):
             is_open = False
 
     return is_open
+
+# Function to calculate the distance between two points
+def calculate_distance(point1, point2):
+    return np.linalg.norm(np.array(point1) - np.array(point2))
