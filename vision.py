@@ -28,7 +28,7 @@ def findFaceFromCollection(collection_encodings, target_encoding):
     for i, match in enumerate(matches):
         if match:
             return i
-    return None
+    return -1
 
 def findNextTurn(source_image, players_encodings, max_hands):
     frame = cv2.flip(source_image, 1)
