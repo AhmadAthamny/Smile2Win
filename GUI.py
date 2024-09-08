@@ -15,6 +15,8 @@ class MainGUI:
         self.__video_capture = None
         self.__cam_activated = False
 
+        self.__participant_cards = []
+
     ### GAME'S GENERAL WINDOW SETTINGS ###
     def __setup_root(self):
         self.__root.geometry(str(WINDOW_WIDTH) + "x" + str(WINDOW_HEIGHT))
@@ -216,7 +218,17 @@ class MainGUI:
         self.__left_canvas = tk.Canvas(self.__root, bg=LEFT_CANVAS_COLOR, height=LEFT_CANVAS_HEIGHT,
                                        width=LEFT_CANVAS_WIDTH,
                                        highlightthickness=0)
+        self.__left_canvas.pack_propagate(False)
         self.__add_camera()
+        self.__build_participants_cards(3)
+
+    def __build_participants_cards(self, num_participants):
+        for p in range(num_participants):
+            card = tk.Canvas(self.__left_canvas, bg="white", width=LEFT_CANVAS_WIDTH-40, 
+                             height=65)
+            pad_x = (20, 20)
+            pad_y = (0, 20) if p > 0 else (CAMERA_HEIGHT + self.__camera.winfo_y() + 60, 20)
+            card.pack(padx=pad_x, pady=pad_y)
 
     ### GUI'S GENERAL METHODS ###
     def start_gui(self):
