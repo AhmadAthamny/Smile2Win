@@ -78,6 +78,10 @@ class GameCore:
     # Returns the count of the participants we have in the game.
     def participants_count(self):
         return self.__participants.get_participants_count()
+    
+    # Returns list of participants
+    def get_all_participants(self):
+        return self.__participants.get_all_participants()
 
     def recognize_speech(self):
         self.__speech_recognizer.run_recognizer()
@@ -87,6 +91,19 @@ class GameCore:
 
     def recognized_text(self):
         return self.__speech_recognizer.recognized_text()
+    
+    def inspect_participants_hands(self):
+        img = self.__Main_GUI.take_shot()
+        participants, encodings = self.__participants.get_participants_encodings()
+        
+        result = self.vision.find_next_turn(img, encodings)
+
+        raising_hands = []
+        for i in range(result):
+            raising_hands.append(participants[i])
+
+        return raising_hands
+        
 
     def end_game(self):
         self.__speech_recognizer.stop_recognizer()
