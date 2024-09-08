@@ -1,5 +1,3 @@
-import base64
-import cv2
 import time
 
 from intellegent_bot import parse_name_from_text
@@ -9,7 +7,6 @@ class GameSetup:
     def __init__(self, game_core):
         self.__game_core = game_core
         self.__vision = self.__game_core.vision
-        self.__found = 0
 
     def extract_faces(self, img):
         current_encodings, face_images = self.__vision.extract_faces(img)
@@ -25,9 +22,6 @@ class GameSetup:
 
     def ask_for_names(self):
         p_num = 0
-
-        # Tells it's the first time waiting for the same person to talk.
-        first_time = True
 
         # Pick a participant who wasn't asked for a name yet.
         p = self.__game_core.get_participant_from_name(None)
