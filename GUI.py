@@ -15,8 +15,7 @@ class MainGUI:
         self.__video_capture = None
         self.__cam_activated = False
 
-        self.__participant_cards = []
-
+        
     ### GAME'S GENERAL WINDOW SETTINGS ###
     def __setup_root(self):
         self.__root.geometry(str(WINDOW_WIDTH) + "x" + str(WINDOW_HEIGHT))
