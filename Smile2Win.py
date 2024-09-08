@@ -2,17 +2,18 @@ import threading
 from GUI import MainGUI
 from Participant import Participant, ParticipantsList
 from GameSetup import *
-from speech_text import SpeechTexter
+import speech_text
+import vision
 
+MAXIMUM_PLAYERS = 10
 
 class GameCore:
     def __init__(self, min_participants):
         self.__Main_GUI = MainGUI(self)
-        self.participants = ParticipantsList()
-        self.__speech_recognizer = SpeechTexter()
-        self.face_recognizer = faceRecognition()
+        self.__participants = ParticipantsList()
+        self.__speech_recognizer = speech_text.SpeechTexter()
+        self.vision = vision.Vision(MAXIMUM_PLAYERS)
         self.__game_setup = GameSetup(self)
-        self.__participant_count = 0
         self.minimum_participants = min_participants
 
     def start_game(self):
@@ -24,7 +25,6 @@ class GameCore:
         self.extracting_thread.start()
 
     def extract_faces_job(self):
-        self.face_recognizer.create_face_set()
         # We keep taking shots of the camera, until there are enough people in front of it.
         while True:
             img = self.__Main_GUI.take_shot()
@@ -42,7 +42,7 @@ class GameCore:
         # more than the minimum number that was set.
         if not self.__game_setup.ask_for_names():
             # If the number of participants is less than the minimum, then we wait 6 seconds then stop the game.
-            time.sleep(6)
+            time.sleep(2)
 
             # Stop the GUI.
             self.__Main_GUI.stop_gui()
@@ -67,16 +67,18 @@ class GameCore:
 
     # This function is used by the GameSetup module.
     # It creates a new participant instance and adds it to the participants list of the game.
-    def add_participant_to_game(self, faceid, face_img):
-        new_participant = Participant()
-        new_participant.set_faceId(faceid)
-        new_participant.set_picture(face_img)
-        self.participants.add_participant(new_participant)
-        self.__participant_count += 1
+    def add_participant_to_game(self, name, faceid, face_img):
+        self.__participants.add_participant(name, faceid, face_img)
+
+    def get_participant_from_name(self, name):
+        return self.__participants.get_participant_from_name(name)
+        
+    def remove_participant(self, participant):
+        self.__participants.remove_participant(participant)
 
     # Returns the count of the participants we have in the game.
     def participants_count(self):
-        return self.__participant_count
+        return self.__participants.get_participants_count()
 
     def recognize_speech(self):
         self.__speech_recognizer.run_recognizer()
