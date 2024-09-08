@@ -1,6 +1,5 @@
 import base64
 import cv2
-import requests
 import time
 from speech_text import recognize_from_microphone
 from intellegent_bot import parse_name_from_text
