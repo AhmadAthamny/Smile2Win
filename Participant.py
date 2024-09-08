@@ -37,8 +37,13 @@ class ParticipantsList:
     def __init__(self):
         self.__participants_list = []
 
-    def add_participant(self, participant):
-        self.__participants_list.append(participant)
+    def add_participant(self, name, faceid, image):
+        new_p = Participant()
+        new_p.set_picture(image)
+        new_p.set_faceId(faceid)
+        new_p.set_name(name)
+
+        self.__participants_list.append(new_p)
 
     def get_participant_from_name(self, name):
         for p in self.__participants_list:
@@ -60,3 +65,6 @@ class ParticipantsList:
 
     def remove_all_participants(self):
         self.__participants_list = []
+
+    def get_participants_count(self):
+        return len(self.__participants_list)
