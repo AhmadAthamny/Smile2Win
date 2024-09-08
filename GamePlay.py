@@ -4,7 +4,7 @@ import re
 import random
 
 class GamePlay:
-    def __init__(self, core, participants) -> None:
+    def __init__(self, core) -> None:
         self.__core = core
         self.__current_question = 0
         self.__questions_list = []
@@ -21,6 +21,10 @@ class GamePlay:
 
         # Ask questions.
         self.__ask_questions()
+
+        # Ending game
+        winner_name = self.__get_winner_name()
+        self.__set_bot_text(f"The game has ended, and the winner is:\n{winner_name}")
 
 
     def __ask_concept(self):
@@ -80,7 +84,7 @@ class GamePlay:
             # Now, check answer correctness.
             correctness = check_correct_answer(question, res)
 
-            if correctness <= 5: # bad answer is less than 5/10
+            if correctness <= 5: # bad answer is equal or less than 5/10
                 self.__core.set_bot_text("Good try, question still not answered.")
 
                 # We loop again to ask the same question.
@@ -111,3 +115,10 @@ class GamePlay:
 
         sorted_cards = sorted(cards_data, key=lambda x: x[2], reverse=True)
         self.__core.update_participant_cards(sorted_cards)
+
+    def __get_winner_name(self):
+        participants = self.__core.get_all_participants()
+
+        winner = max(participants, key=lambda p: p.get_points())
+
+        return winner.get_name()
