@@ -136,6 +136,8 @@ class MainGUI:
         self.__root.mainloop()
 
     def stop_gui(self):
+        self.__video_capture.release()
+        self.__root.destroy()
         exit()
 
     def take_shot(self):
