@@ -99,8 +99,7 @@ class MainGUI:
 
     def names_setup(self):
         self.__WS_statement.destroy()
-        self.__face_setup_canvas = tk.Canvas(self.__root, height=200, width=330, bg="#2a3966", highlightthickness=3)
-        self.__face_setup_canvas.pack()
+        self.__face_setup_canvas = tk.Canvas(self.__root, height=350, width=350, bg="#2a3966", highlightthickness=3)
         self.__face_img = tk.Label(self.__root, highlightcolor="#2a3966", bg="#2a3966")
 
         self.__participant_name = tk.Label(self.__root, font=("Arial Rounded MT Bold", 30), text="",
@@ -108,17 +107,12 @@ class MainGUI:
 
         tmp_image = Image.open("Resources/recording_mic.png")
         self.__mic_icon_img = ImageTk.PhotoImage(tmp_image)
-        self.__mic_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__mic_icon_img,
-                                                                   state="hidden")
+        self.__mic_icon_id = tk.Label(self.__root, image=self.__mic_icon_img)
 
         tmp_image_2 = Image.open("Resources/v_icon.png")
         self.__done_icon_img = ImageTk.PhotoImage(tmp_image_2)
         self.__done_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__done_icon_img,
                                                                     state="hidden")
-
-        x_cord = (WINDOW_WIDTH - 170) // 2 - 35
-        y_cord = 390
-        self.__face_img.place(x=x_cord, y=y_cord)
         self.__participant_name.pack(pady=(50, 0))
     
     def end_names_setup(self):
@@ -133,15 +127,18 @@ class MainGUI:
         This function is called everytime a participant wants to say his name.
         """
         # Show user's face only with white frame.
-        if toggle == 0:
-            self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
-            self.__face_setup_canvas.itemconfigure(self.__done_icon_id, state='hidden')
-            self.__face_setup_canvas.configure(highlightbackground="white")
+        if toggle == 1:
+            x_cord = (WINDOW_WIDTH - 170) // 2 + 300
+            y_cord = 390
+            self.__mic_icon_id.place(x=x_cord, y=y_cord)
+
+            self.__face_setup_canvas.configure(highlightbackground="red")
 
         # Recognizing user's speech, red frame with orange mic icon displayed on the screen.
-        elif toggle == 1:
-            self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='normal')
-            self.__face_setup_canvas.configure(highlightbackground="red")
+        elif toggle == 0:
+            if self.__mic_icon_id.winfo_viewable:
+                self.__mic_icon_id.place_forget()
+                self.__face_setup_canvas.configure(highlightbackground="white")
 
         # Green frame, with a green v-symbol.
         elif toggle == 2:
@@ -175,7 +172,22 @@ class MainGUI:
 
         # Convert the frame to an image that tkinter can handle
         image_to_display = Image.fromarray(tmp_frame_rgb)
-        image_to_display.thumbnail((170, 170))
+        image_to_display.thumbnail((350, 350))
+        
+    
+        new_width = image_to_display.width
+        new_height = image_to_display.height
+
+        # This is shared for the face & face's frame.
+        x_cord = (WINDOW_WIDTH - new_width) // 2
+        y_cord = self.__WS_header.winfo_y() + self.__WS_header.winfo_height()
+
+        self.__face_setup_canvas.config(width=new_width+4, height=new_height+4)
+        self.__face_setup_canvas.place(x=x_cord-2, y=y_cord-2)
+        self.__face_img.place(x=x_cord, y=y_cord)
+
+        # updating location of spoken name
+        self.__participant_name.pack(pady=(y_cord, 0))
 
         # Create a PhotoImage and update the tkinter label with the new image
         img_tk = ImageTk.PhotoImage(image=image_to_display)

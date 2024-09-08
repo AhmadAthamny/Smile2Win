@@ -24,9 +24,7 @@ class GameSetup:
         return True
 
     def ask_for_names(self):
-        # Count variable that holds the count of confirmed participants.
-        # Confirmed participants which means people who their names were saved, and they will play.
-        count = 0
+        p_num = 0
 
         # Tells it's the first time waiting for the same person to talk.
         first_time = True
@@ -34,14 +32,12 @@ class GameSetup:
         # Pick a participant who wasn't asked for a name yet.
         p = self.__game_core.get_participant_from_name(None)
         while p:
+            p_num += 1
             self.__game_core.show_mic_icon(0)
-
-            if first_time:
-                self.__game_core.display_face(p.get_picture())
-                self.__game_core.set_spoken_name("Participant #" + str(count + 1) + " Name")
-                first_time = False
-
+            self.__game_core.display_face(p.get_picture())
+            self.__game_core.set_spoken_name("Participant #" + str(p_num) + " Name")
             self.listen_participant_name(p)
+
             p = self.__game_core.get_participant_from_name(None)
 
         # Process finished successfully.
@@ -88,5 +84,5 @@ class GameSetup:
             # else, we got the name:
             else:
                 participant.set_name(parsed_name[1])
-                self.__game_core.set_spoken_name("Hi Ahmad")
+                self.__game_core.set_spoken_name("Hi " + parsed_name[1])
                 time.sleep(1.5)

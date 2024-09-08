@@ -29,15 +29,15 @@ class Vision:
         for (top, right, bottom, left) in face_locations:
             # Extract the face from the original image
 
-            padding = 40
-            top = max(0, top - padding)
-            bottom = min(source_image.shape[0], bottom + padding)
-            left = max(0, left - padding)
-            right = min(source_image.shape[1], right + padding)
+            top = max(0, top - int((bottom - top) * 0.7))
+            bottom = min(source_image.shape[0], bottom + int((bottom - top)*0.2))
+            left = max(0, left - int((right-left)*0.2))
+            right = min(source_image.shape[1], right + int((right-left)*0.2))
 
             # Extract the face with padding from the original image
             face_image = source_image[top:bottom, left:right]
             face_images.append(face_image)  # Append the cropped face image to the list
+
 
         return current_encodings, face_images
 
