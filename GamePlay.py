@@ -10,6 +10,9 @@ class GamePlay:
         self.__questions_list = []
 
     def start_game(self):
+        # We need the cards to be up-to-date.
+        self.__generate_cards_data()
+
         # We first need to specify the concept and generate questions.
         self.__ask_concept()
 
@@ -80,7 +83,7 @@ class GamePlay:
             if correctness <= 5: # bad answer is less than 5/10
                 self.__core.set_bot_text("Good try, question still not answered.")
 
-                # we loop again to ask the same question.
+                # We loop again to ask the same question.
             else:
                 # Good answer
                 self.__core.set_bot_text(f"Good answer {chosen_participant.get_name()}, {correctness}/10.")
@@ -88,9 +91,10 @@ class GamePlay:
                 # Give points
                 chosen_participant.give_points(correctness)
 
-                # sort players, and update cards.
+                # Sort players, and update cards.
+                self.__generate_cards_data()
 
-                #Move to next question
+                # Move to next question
                 self.__current_question += 1
             
             # Sleep before asking same/next question.
@@ -103,3 +107,7 @@ class GamePlay:
         cards_data = []
         for p in participants:
             card = (p.get_picture(), p.get_name(), p.get_points())
+            cards_data.append(card)
+
+        sorted_cards = sorted(cards_data, key=lambda x: x[2], reverse=True)
+        self.__core.update_participant_cards(sorted_cards)
