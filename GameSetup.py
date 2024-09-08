@@ -2,27 +2,25 @@ import base64
 import cv2
 import time
 
-from face_recognition import *
 from intellegent_bot import parse_name_from_text
 
 
 class GameSetup:
     def __init__(self, game_core):
         self.__game_core = game_core
-        self.__face_recognizer = self.__game_core.face_recognizer
+        self.__vision = self.__game_core.vision
         self.__found = 0
 
     def extract_faces(self, img):
-        buffer = cv2.imencode('.jpg', img)[1]
-        base64_img = base64.b64encode(buffer).decode("utf-8")
-        result = self.__face_recognizer.detect_faces(img, base64_img)
+        current_encodings, face_images = self.__vision.extract_faces(img)
 
-        # Check if there are at least two persons
-        if len(result) < self.__game_core.minimum_participants:
+        # Check if there is minimum count of participants.
+        if len(current_encodings) < self.__game_core.minimum_participants:
             return False
+        
 
-        for face in result:
-            self.__game_core.add_participant_to_game(face[0], face[1])
+        for i in range(len(current_encodings)):
+            self.__game_core.add_participant_to_game(None, current_encodings[i], face_images[i])
         return True
 
     def ask_for_names(self):
@@ -34,7 +32,7 @@ class GameSetup:
         first_time = True
 
         # Pick a participant who wasn't asked for a name yet.
-        p = self.__game_core.participants.get_participant_from_name(None)
+        p = self.__game_core.get_participant_from_name(None)
         while p:
             self.__game_core.show_mic_icon(0)
 
@@ -44,9 +42,15 @@ class GameSetup:
                 first_time = False
 
             self.listen_participant_name(p)
-            p = self.__game_core.participants.get_participant_from_name(None)
+            p = self.__game_core.get_participant_from_name(None)
 
         # Process finished successfully.
+        # Check if we have the minimum players.
+        if self.__game_core.participants_count() < self.__game_core.minimum_participants:
+            self.__game_core.set_spoken_name("Not enough players, game ending.")
+            return False
+        
+        # Else, we are good to go.
         return True
 
     def listen_participant_name(self, participant):
@@ -55,7 +59,8 @@ class GameSetup:
         self.__game_core.show_mic_icon()
         self.__game_core.recognize_speech()
         while not self.__game_core.recognizing_finished():
-            time.sleep(10)
+            time.sleep(0.5)
+            self.__game_core.set_spoken_name(self.__game_core.recognized_text())
 
         self.__game_core.show_mic_icon(False)
 
@@ -72,7 +77,8 @@ class GameSetup:
             # not playing
             if parsed_name == (False, 0):
                 self.__game_core.set_spoken_name("Not participating :(")
-                self.__game_core.participants.remove_participant(participant)
+                self.__game_core.remove_participant(participant)
+                time.sleep(1.5)
 
             # no name found in the spoken text.
             elif parsed_name == (False, 1):
@@ -82,6 +88,5 @@ class GameSetup:
             # else, we got the name:
             else:
                 participant.set_name(parsed_name[1])
-                # Add the person to the faceset, so we can remember his faceid later.
-                face_id = participant.get_faceId()
-                self.__face_recognizer.add_face_to_set(face_id)
+                self.__game_core.set_spoken_name("Hi Ahmad")
+                time.sleep(1.5)
