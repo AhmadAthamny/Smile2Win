@@ -2,6 +2,7 @@ import threading
 from GUI import MainGUI
 from Participant import Participant, ParticipantsList
 from GameSetup import *
+from GamePlay import *
 import speech_text
 import vision
 
@@ -14,6 +15,7 @@ class GameCore:
         self.__speech_recognizer = speech_text.SpeechTexter()
         self.vision = vision.Vision(MAXIMUM_PLAYERS)
         self.__game_setup = GameSetup(self)
+        self.__game_play = GamePlay(self)
         self.minimum_participants = min_participants
 
     def start_game(self):
@@ -51,6 +53,8 @@ class GameCore:
         # If name collecting was successful, we then need to know what's the game concept:
         self.__Main_GUI.end_names_setup()
 
+    def start_playing_game(self):
+        self.__game_play.start_game()
 
     # This function is used by the GameSetup module.
     def display_face(self, img):
@@ -104,6 +108,14 @@ class GameCore:
 
         return raising_hands
         
+    def set_bot_text(self, header, text):
+        self.__Main_GUI.update_bot_text(header, text)
+
+    def update_participants_cards(self, cards):
+        pass 
+
+    def insert_player_text(self, text):
+        self.__Main_GUI.insert_player_text(text)
 
     def end_game(self):
         self.__speech_recognizer.stop_recognizer()

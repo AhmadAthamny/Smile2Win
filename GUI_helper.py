@@ -20,6 +20,7 @@ TOP_BAR_COLOR = "#FFFFFF"
 LEFT_CANVAS_COLOR = "#2E3859"
 MAIN_WINDOW_COLOR = "#131E40"
 
+PLAYER_CANVAS_COLOR = "#FFFFFF"
 
 #LEFT_CANVAS_COLOR = "#131E40"
 #MAIN_WINDOW_COLOR = "#2E3859"
@@ -34,6 +35,9 @@ LEFT_CANVAS_HEIGHT = 1250
 CAMERA_HEIGHT = 315
 CAMERA_WIDTH = 560
 
+BOT_TEXT_MAX_HEIGHT = 230
+BOT_TEXT_MAX_WIDTH = WINDOW_WIDTH - LEFT_CANVAS_WIDTH - 40
+
 LINE_MAX_CHARS = 35
 
 CAPTURE_WIDTH = 1280
@@ -45,24 +49,3 @@ def get_handle(root) -> int:
     root.update_idletasks()
     # This gets the window's parent same as `ctypes.windll.user32.GetParent`
     return GetWindowLongPtrW(root.winfo_id(), GWLP_HWNDPARENT)
-
-
-def break_str(text, max_chars):
-    words = text.split()
-    current_len, current_words = 0, 0
-    final = ""
-    for i in range(0, len(words)):
-        if current_len + len(words[i]) > max_chars:
-            if current_words > 0:
-                final += "\n"
-            current_len = 0
-            current_words = 0
-
-        if current_words > 0:
-            final += " "
-            current_len += 1
-
-        final += words[i]
-        current_len += len(words[i])
-        current_words += 1
-    return final

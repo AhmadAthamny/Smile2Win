@@ -11,6 +11,7 @@ class GamePlay:
 
     def start_game(self):
         # We need the cards to be up-to-date.
+        print("reached here")
         self.__generate_cards_data()
 
         # We first need to specify the concept and generate questions.
@@ -29,16 +30,18 @@ class GamePlay:
 
     def __ask_concept(self):
         self.__core.recognize_speech()
+
+        res = ""
+        self.__core.insert_player_text("\n\n")
         while not self.__core.recognizing_finished():
             time.sleep(0.5)
-            res = self.__core.recognized_text()
+            res = self.__core.recognized_text().replace(res, "")
 
             # Update the GUI to display the player's text.
-            self.__core.set_player_text(res)
+            self.__core.insert_player_text(res)
 
         # Once listening is done, update the text with the interpreted speech. 
         res = self.__core.recognized_text()
-        self.__core.set_player_text(res)
 
         # Now, give the recognized text to intellegent boy.
         response = parse_concept_from_text(res)
@@ -71,15 +74,16 @@ class GamePlay:
             chosen_participant = random.choice(raising_hands)
 
             # Now, we need an answer
+            res = ""
             self.__core.recognize_speech()
+            self.__core.insert_player_text(f"\n\n{chosen_participant.get_name()}:\n")
             while not self.__core.recognizing_finished():
                 time.sleep(0.5)
-                res = "\n\n" + self.__core.recognized_text()
-                self.__core.set_player_text(res)
+                res = self.__core.recognized_text().replace(res, "")
+                self.__core.insert_player_text(res)
             
             # Get response after interpreting.
-            res = "\n\n" + self.__core.recognized_text()
-            self.__core.set_player_text(res)
+            res = self.__core.recognized_text()
 
             # Now, check answer correctness.
             correctness = check_correct_answer(question, res)
@@ -114,7 +118,7 @@ class GamePlay:
             cards_data.append(card)
 
         sorted_cards = sorted(cards_data, key=lambda x: x[2], reverse=True)
-        self.__core.update_participant_cards(sorted_cards)
+        self.__core.update_participants_cards(sorted_cards)
 
     def __get_winner_name(self):
         participants = self.__core.get_all_participants()
