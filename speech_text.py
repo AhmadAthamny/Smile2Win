@@ -35,7 +35,6 @@ class SpeechTexter:
         self.__speech_recognizer.stop_continuous_recognition_async()
 
     def __start_speech_recognition(self):
-        print("startinggg")
         # Start continuous recognition
         self.__speech_recognizer.start_continuous_recognition_async()
 
@@ -58,3 +57,8 @@ class SpeechTexter:
 
     def recognized_text(self):
         return self.__recognized_text
+
+    def stop_recognizer(self):
+        if self.__recognizing:
+            self.__recognizing = False
+            self.__speech_recognizer.stop_continuous_recognition_async()

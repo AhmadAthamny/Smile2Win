@@ -22,6 +22,7 @@ class GameCore:
 
     def extract_faces(self):
         self.extracting_thread = threading.Thread(target=self.extract_faces_job)
+        self.extracting_thread.daemon = True
         self.extracting_thread.start()
 
     def extract_faces_job(self):
@@ -51,8 +52,6 @@ class GameCore:
         self.__Main_GUI.end_names_setup()
 
 
-
-
     # This function is used by the GameSetup module.
     def display_face(self, img):
         self.__Main_GUI.display_face(img)
@@ -63,7 +62,7 @@ class GameCore:
 
     # This function is used by the GameSetup module.
     def show_mic_icon(self, toggle=True):
-        self.__Main_GUI.start_listening(toggle)
+        self.__Main_GUI.start_listening_names(toggle)
 
     # This function is used by the GameSetup module.
     # It creates a new participant instance and adds it to the participants list of the game.
@@ -89,6 +88,9 @@ class GameCore:
     def recognized_text(self):
         return self.__speech_recognizer.recognized_text()
 
+    def end_game(self):
+        self.__speech_recognizer.stop_recognizer()
+        exit()
 
 if __name__ == '__main__':
     Core = GameCore(1)
