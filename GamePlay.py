@@ -11,7 +11,6 @@ class GamePlay:
 
     def start_game(self):
         # We need the cards to be up-to-date.
-        print("reached here")
         self.__generate_cards_data()
 
         # We first need to specify the concept and generate questions.
