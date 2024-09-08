@@ -22,8 +22,7 @@ class SpeechTexter:
 
     # Handler for the continuous listening.
     def __recognizing_handler(self, evt):
-        print(evt.result.text)
-        self.__recognized_text = evt.result.txt
+        self.__recognized_text = evt.result.text
 
     # Handles the end of the listening
     def __recognized_handler(self, evt):
@@ -33,6 +32,7 @@ class SpeechTexter:
             self.__recognized_text = None
 
         self.__recognizing = False
+        self.__speech_recognizer.stop_continuous_recognition_async()
 
     def __start_speech_recognition(self):
         print("startinggg")
