@@ -9,14 +9,16 @@ class Vision:
         Initialize the Vision system with MediaPipe Hands for hand detection and
         other related settings.
         """
-        self.max_hands = max_hands
+        self.max_hands = max_hands 
         self.hands = mp.solutions.hands.Hands(max_num_hands=max_hands, min_detection_confidence=min_detection_confidence)
 
     def extract_faces(self, source_image):
         """
-        Given a source image, extract face locations and their encodings.
+        Given a source image, extract face images and their encodings.
         """
-        rgb_image = source_image[:, :, ::-1]  # Convert BGR to RGB for face_recognition
+        
+        # Convert BGR (from VideoCapture) to RGB (for face_recognition)
+        rgb_image = cv2.cvtColor(source_image, cv2.COLOR_BGR2RGB)
 
         # Detect face locations and their encodings
         face_locations = face_recognition.face_locations(rgb_image)
@@ -29,7 +31,7 @@ class Vision:
             face_image = source_image[top:bottom, left:right]
             face_images.append(face_image)  # Append the cropped face image to the list
 
-        return face_locations, current_encodings, face_images
+        return current_encodings, face_images
 
     def __find_face_from_collection(self, collection_encodings, target_encoding):
         """
@@ -136,3 +138,4 @@ class Vision:
                             faces_with_hand.append(found_face)
 
         return faces_with_hand
+    
