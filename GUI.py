@@ -15,6 +15,7 @@ class MainGUI:
         self.__build_main_window()
         self.__video_capture = None
         self.__cam_activated = False
+        self.__player_text_box_index = None
 
     ### GAME'S GENERAL WINDOW SETTINGS ###
     def __setup_root(self):
@@ -218,15 +219,16 @@ class MainGUI:
     def __add_player_text_box(self):
         self.__player_text_box = tk.Text(self.__root, bg=MAIN_WINDOW_COLOR, 
                                          highlightthickness=0, width=40, height=5, borderwidth=0,
-                                         wrap=tk.WORD)
+                                         wrap=tk.WORD, state="disabled")
         self.__player_text_box.tag_configure("white", foreground="white")
         self.__player_text_box.tag_configure("white", font=("Coolvetica", 17))
 
     def __reposition_player_text_box(self):
         padding_y_top = self.__bot_text.winfo_y() + self.__bot_text.winfo_height() 
-        padding_y_top = max(padding_y_top, 270)
         self.__player_text_box.pack(side=tk.LEFT, fill=tk.BOTH, padx=(60, 60), pady=(padding_y_top, 60), expand=True)  # Pack the text box to the right
         self.__player_text_box.config(bg=LEFT_CANVAS_COLOR)
+        self.__player_text_box.see(tk.END)
+
 
     def __build_participants_cards(self, num_participants):
         for p in range(num_participants):
@@ -240,9 +242,20 @@ class MainGUI:
         self.__bot_text.config(text=new_text)
         self.__reposition_player_text_box()
 
-    def insert_player_text(self, new_text):
+    def insert_player_text(self, new_text, replace=False):
+        self.__player_text_box.config(state="normal")
+
+        current_index = self.__player_text_box.index("insert")
+        if replace and self.__player_text_box_index:
+            self.__player_text_box.delete(self.__player_text_box_index, current_index)
+        
         self.__player_text_box.insert(tk.END, new_text, "white")
         self.__player_text_box.see(tk.END)
+
+        if not replace:
+            self.__player_text_box_index = self.__player_text_box.index("insert")
+
+        self.__player_text_box.config(state="disabled")
 
     ### GUI'S GENERAL METHODS ###
     def start_gui(self):
