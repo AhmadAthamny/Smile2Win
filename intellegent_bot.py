@@ -1,4 +1,5 @@
 from openai import OpenAI
+import re
 
 OPENAI_KEY = "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"
 
@@ -48,7 +49,9 @@ def parse_concept_from_text(text):
     response = tell_bot(instructions, text)
     if response == "FAIL":
         return False
-    return response
+    
+    pattern = r"\d+- (.+?)\n"
+    return re.findall(pattern, response)
 
 def check_correct_answer(question, answer):
     instructions = "I will give you a question, and a corresponding answer.\
