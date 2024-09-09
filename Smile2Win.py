@@ -103,7 +103,7 @@ class GameCore:
         result = self.vision.find_next_turn(img, encodings)
 
         raising_hands = []
-        for i in range(result):
+        for i in range(len(result)):
             raising_hands.append(participants[i])
 
         return raising_hands
@@ -114,8 +114,8 @@ class GameCore:
     def update_participants_cards(self, cards):
         pass 
 
-    def insert_player_text(self, text):
-        self.__Main_GUI.insert_player_text(text)
+    def insert_player_text(self, text, replace=False):
+        self.__Main_GUI.insert_player_text(text, replace)
 
     def end_game(self):
         self.__speech_recognizer.stop_recognizer()
