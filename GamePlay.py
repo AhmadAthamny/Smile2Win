@@ -32,14 +32,13 @@ class GamePlay:
         self.__core.recognize_speech()
 
         res = ""
-        self.__core.insert_player_text("\n")
+        self.__core.insert_player_text("\n\nConcept suggestion:\n")
         while not self.__core.recognizing_finished():
             time.sleep(0.5)
-            res = self.__core.recognized_text().replace(res, "")
+            res = self.__core.recognized_text()
 
             # Update the GUI to display the player's text.
-            self.__core.insert_player_text(res)
-            print("recognizing concept")
+            self.__core.insert_player_text(res, True)
 
         # Once listening is done, update the text with the interpreted speech. 
         res = self.__core.recognized_text()
@@ -48,8 +47,9 @@ class GamePlay:
         response = parse_concept_from_text(res)
         if not response:
             # here we need to try again
+            self.__core.set_bot_text("Concept", "Sorry, can you try again?")
+            time.sleep(2)
             self.__ask_concept()
-            self.__core.set_bot_text("Concept", "Please say the concept you want, again.")
         else:
             # we have questions, lets parse them.
             self.__questions_list = response
@@ -79,8 +79,8 @@ class GamePlay:
             self.__core.insert_player_text(f"\n\n{chosen_participant.get_name()}:\n")
             while not self.__core.recognizing_finished():
                 time.sleep(0.5)
-                res = self.__core.recognized_text().replace(res, "")
-                self.__core.insert_player_text(res)
+                res = self.__core.recognized_text()
+                self.__core.insert_player_text(res, True)
             
             # Get response after interpreting.
             res = self.__core.recognized_text()
@@ -89,12 +89,12 @@ class GamePlay:
             correctness = check_correct_answer(question, res)
 
             if correctness <= 5: # bad answer is equal or less than 5/10
-                self.__core.set_bot_text("Good try, question still not answered.")
+                self.__core.set_bot_text("Question", "Good try, question still not answered.")
 
                 # We loop again to ask the same question.
             else:
                 # Good answer
-                self.__core.set_bot_text(f"Good answer {chosen_participant.get_name()}, {correctness}/10.")
+                self.__core.set_bot_text("Question", f"Good answer {chosen_participant.get_name()}, {correctness}/10.")
                 
                 # Give points
                 chosen_participant.give_points(correctness)
