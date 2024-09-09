@@ -1,6 +1,5 @@
 import time
 from intellegent_bot import parse_concept_from_text, check_correct_answer
-import re
 import random
 
 class GamePlay:
@@ -24,20 +23,23 @@ class GamePlay:
 
         # Ending game
         winner_name = self.__get_winner_name()
-        self.__set_bot_text(f"The game has ended, and the winner is:\n{winner_name}")
+        self.__core.set_bot_text("Winner", f"The game has ended, and the winner is:\n{winner_name}")
 
 
     def __ask_concept(self):
+        self.__core.set_bot_text("Concept", "Suggest a concept for the game, including number of questions if you want.")
+
         self.__core.recognize_speech()
 
         res = ""
-        self.__core.insert_player_text("\n\n")
+        self.__core.insert_player_text("\n")
         while not self.__core.recognizing_finished():
             time.sleep(0.5)
             res = self.__core.recognized_text().replace(res, "")
 
             # Update the GUI to display the player's text.
             self.__core.insert_player_text(res)
+            print("recognizing concept")
 
         # Once listening is done, update the text with the interpreted speech. 
         res = self.__core.recognized_text()
@@ -47,17 +49,16 @@ class GamePlay:
         if not response:
             # here we need to try again
             self.__ask_concept()
-            self.__core.set_bot_text("Please say the concept you want, again.")
+            self.__core.set_bot_text("Concept", "Please say the concept you want, again.")
         else:
             # we have questions, lets parse them.
-            pattern = r"\d+- (.+?)\n"
-            self.__questions_list = re.findall(pattern, response)
-            self.__core.set_bot_text("Cool, let's get started.")
+            self.__questions_list = response
+            self.__core.set_bot_text("Concept", "Cool, let's get started.")
 
     def __ask_questions(self):
         while self.__current_question < len(self.__questions_list):
             question = self.__questions_list[self.__current_question]
-            self.__core.set_bot_text(question)
+            self.__core.set_bot_text("Question", question)
 
             # Wait 2 seconds before inspecting hands
             time.sleep(2)

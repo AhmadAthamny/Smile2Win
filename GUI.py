@@ -219,14 +219,14 @@ class MainGUI:
         self.__player_text_box = tk.Text(self.__root, bg=MAIN_WINDOW_COLOR, 
                                          highlightthickness=0, width=40, height=5, borderwidth=0,
                                          wrap=tk.WORD)
+        self.__player_text_box.tag_configure("white", foreground="white")
+        self.__player_text_box.tag_configure("white", font=("Coolvetica", 17))
 
     def __reposition_player_text_box(self):
         padding_y_top = self.__bot_text.winfo_y() + self.__bot_text.winfo_height() 
         padding_y_top = max(padding_y_top, 270)
         self.__player_text_box.pack(side=tk.LEFT, fill=tk.BOTH, padx=(60, 60), pady=(padding_y_top, 60), expand=True)  # Pack the text box to the right
         self.__player_text_box.config(bg=LEFT_CANVAS_COLOR)
-        self.__player_text_box.tag_configure("white", foreground="white")
-        self.__player_text_box.tag_configure("white", font=("Coolvetica", 14))
 
     def __build_participants_cards(self, num_participants):
         for p in range(num_participants):
