@@ -9,7 +9,7 @@ class GameSetup:
         self.__vision = self.__game_core.vision
 
     def extract_faces(self, img):
-        current_encodings, face_images = self.__vision.extract_faces(img)
+        tmp, current_encodings, face_images = self.__vision.extract_faces(img)
 
         # Check if there is minimum count of participants.
         if len(current_encodings) < self.__game_core.minimum_participants:
