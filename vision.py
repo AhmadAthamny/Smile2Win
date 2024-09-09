@@ -39,7 +39,7 @@ class Vision:
             face_images.append(face_image)  # Append the cropped face image to the list
 
 
-        return current_encodings, face_images
+        return face_locations, current_encodings, face_images
 
     def __find_face_from_collection(self, collection_encodings, target_encoding):
         """
@@ -108,7 +108,7 @@ class Vision:
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Extract faces from the image
-        face_locations, current_encodings = self.extract_faces(source_image)
+        face_locations, current_encodings, tmp = self.extract_faces(source_image)
 
         # Process the image to detect hands
         results = self.hands.process(rgb_frame)

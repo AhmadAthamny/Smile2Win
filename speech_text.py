@@ -1,6 +1,6 @@
 from threading import Thread
 import azure.cognitiveservices.speech as speechsdk
-
+import time
 
 class SpeechTexter:
     def __init__(self):
@@ -26,13 +26,15 @@ class SpeechTexter:
 
     # Handles the end of the listening
     def __recognized_handler(self, evt):
-        if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
+        if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech \
+            or evt.result.reason == speechsdk.ResultReason.Canceled:
             self.__recognized_text = evt.result.text
         elif evt.result.reason == speechsdk.ResultReason.NoMatch:
             self.__recognized_text = None
 
         self.__recognizing = False
-        self.__speech_recognizer.stop_continuous_recognition_async()
+        if self.__speech_recognizer.recognizing:
+            self.__speech_recognizer.stop_continuous_recognition_async()
 
     def __start_speech_recognition(self):
         # Start continuous recognition
@@ -40,8 +42,11 @@ class SpeechTexter:
 
         # Keep the recognizer running until no more words coming.
         while self.__recognizing:
-            pass
-
+            time.sleep(0.2)
+        
+        if self.__recognizing:
+            self.__speech_recognizer.stop_continuous_recognition_async()
+            
     def run_recognizer(self):
         if not self.__recognizing:
             self.__recognized_text = ""
