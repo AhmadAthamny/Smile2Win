@@ -1,14 +1,15 @@
 from threading import Thread
 import azure.cognitiveservices.speech as speechsdk
 import time
+from dotenv import load_dotenv
+import os
 
 class SpeechTexter:
     def __init__(self):
-        # Configurations
-        self.__AZURE_SPEECH_KEY = "27ad332875fe4a9eba0e59bb0cb07686"
-        self.__AZURE_REGION = "westeurope"
 
-        speech_config = speechsdk.SpeechConfig(subscription=self.__AZURE_SPEECH_KEY, region=self.__AZURE_REGION)
+        # Configurations
+        speech_config = speechsdk.SpeechConfig(subscription=os.getenv('AZURE_SPEECH_KEY'), 
+                                               region=os.getenv('AZURE_REGION'))
         audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
         self.__speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
