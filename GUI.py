@@ -1,6 +1,6 @@
 import tkinter as tk
 from GUI_helper import *
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageFont, ImageDraw
 import cv2
 
 
@@ -16,6 +16,8 @@ class MainGUI:
         self.__video_capture = None
         self.__cam_activated = False
         self.__player_text_box_index = None
+        
+        self.__player_cards = []
 
     ### GAME'S GENERAL WINDOW SETTINGS ###
     def __setup_root(self):
@@ -214,7 +216,6 @@ class MainGUI:
                                        highlightthickness=0)
         self.__left_canvas.pack_propagate(False)
         self.__add_camera()
-        self.__build_participants_cards(3)
 
     def __add_player_text_box(self):
         self.__player_text_box = tk.Text(self.__root, bg=MAIN_WINDOW_COLOR, 
@@ -230,12 +231,75 @@ class MainGUI:
         self.__player_text_box.see(tk.END)
 
 
-    def __build_participants_cards(self, num_participants):
-        for p in range(num_participants):
-            card = tk.Canvas(self.__left_canvas, bg="white", width=LEFT_CANVAS_WIDTH-40, height=65)
-            pad_x = (20, 20)
-            pad_y = (0, 20) if p > 0 else (CAMERA_HEIGHT + self.__camera.winfo_y() + 60, 20)
-            card.pack(padx=pad_x, pady=pad_y)
+    def update_participants_cards(self, participants_info):
+
+        # First, remove any old cars.
+        for card in self.__player_cards:
+            self.__left_canvas.delete(card)
+            
+        self.__cards_font = ImageFont.truetype("arial.ttf", 40)
+        pos_x = 315
+        pos_y = self.__camera.winfo_height() + self.__camera.winfo_y()
+        for p_info in participants_info:
+            image, name, score = p_info
+            card = self.__build_single_card(image, name, str(score))
+            tk_image = ImageTk.PhotoImage(card)
+    
+            # Store a reference to the image to avoid garbage collection (otherwise it won't show)
+            self.__player_cards.append(tk_image)
+            
+            # Add the image to the Tkinter canvas at the given position
+            self.__left_canvas.create_image(pos_x, pos_y, image=tk_image)
+
+            pos_y += CARD_HEIGHT + 20
+
+            self.__player_cards.append(card)
+
+    def __build_single_card(self, image, name, score):
+        """Creates a new card with the specified image, name, and score."""
+        # Create a blank card using the predefined macros
+        card = Image.new("RGB", (CARD_WIDTH, CARD_HEIGHT), CARD_NORMAL_BG)
+        draw = ImageDraw.Draw(card)
+
+        # Image coming from the cv2, make it RGB.
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Convert the NumPy array to a PIL Image
+        image_pil = Image.fromarray(image)
+
+        image_pil = image_pil.resize((CARD_HEIGHT, CARD_HEIGHT))  # Resize to fit card height (square)
+        card.paste(image_pil, (0, 0))  # Paste image at the top-left corner
+
+        # Calculate positions for name and score
+        name_x = CARD_HEIGHT + 10  # Position the name just to the right of the image
+        name_y = 10  # Place the name near the top-left (not centered)
+
+        score_x = CARD_WIDTH - SCORE_SQUARE_SIZE  # Place score square on the far right
+        score_y = 0
+
+        # Draw the name text at the top-left, next to the image
+        draw.text((name_x, name_y), name, font=self.__cards_font, fill=CARD_TEXT_COLOR)
+
+        # Draw the score square
+        draw.rectangle(
+            [score_x, score_y, score_x + SCORE_SQUARE_SIZE, score_y + SCORE_SQUARE_SIZE],
+            fill=CARD_SCORE_BG
+        )
+
+        # Use font.getbbox to get the text dimensions
+        bbox = draw.textbbox((0, 0), score, font=self.__cards_font)  # Get bounding box of score text
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        # Calculate centered position for the score text inside the score square
+        score_text_x = score_x + (SCORE_SQUARE_SIZE - text_width) // 2
+        score_text_y = score_y + (SCORE_SQUARE_SIZE - text_height) // 2 - 10
+
+        # Draw the score text in the center of the score square
+        draw.text((score_text_x, score_text_y), score, font=self.__cards_font, fill=CARD_TEXT_COLOR)
+
+        # Return the created card
+        return card
 
     def update_bot_text(self, new_header, new_text):
         self.__game_header.config(text=new_header)

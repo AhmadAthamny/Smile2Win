@@ -47,7 +47,7 @@ class SpeechTexter:
         if self.__recognizing:
             self.__speech_recognizer.stop_continuous_recognition_async()
             
-    def run_recognizer(self):
+    def run_recognizer(self):    
         if not self.__recognizing:
             self.__recognized_text = ""
             # Thread for running the speech recognition

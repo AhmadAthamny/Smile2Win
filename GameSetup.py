@@ -16,12 +16,11 @@ class GameSetup:
             return False
         
 
-        for i in range(len(current_encodings)*5):
-            self.__game_core.add_participant_to_game("Ahmad", current_encodings[0], face_images[0])
+        for i in range(len(current_encodings)):
+            self.__game_core.add_participant_to_game(None, current_encodings[i], face_images[i])
         return True
 
     def ask_for_names(self):
-        return True
         p_num = 0
 
         # Pick a participant who wasn't asked for a name yet.

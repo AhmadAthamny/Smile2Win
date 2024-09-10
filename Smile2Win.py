@@ -112,7 +112,7 @@ class GameCore:
         self.__Main_GUI.update_bot_text(header, text)
 
     def update_participants_cards(self, cards):
-        pass 
+        self.__Main_GUI.update_participants_cards(cards)
 
     def insert_player_text(self, text, replace=False):
         self.__Main_GUI.insert_player_text(text, replace)
