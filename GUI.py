@@ -186,7 +186,14 @@ class MainGUI:
 
         # Convert the frame to an image that tkinter can handle
         image_to_display = Image.fromarray(tmp_frame_rgb)
-        image_to_display.thumbnail((350, 350))
+
+        # Get the original dimensions
+        original_width, original_height = image_to_display.size
+
+        # Calculate ratio and new heightXwidth
+        aspect_ratio = original_height / original_width
+        target_height = int(GAMESETUP_IMG_SIZE * aspect_ratio)
+        image_to_display = image_to_display.resize((GAMESETUP_IMG_SIZE, target_height), Image.LANCZOS)
         
         new_width = image_to_display.width
         new_height = image_to_display.height
