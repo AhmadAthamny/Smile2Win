@@ -1,5 +1,3 @@
-import base64
-import cv2
 import time
 
 from intellegent_bot import parse_name_from_text
@@ -9,10 +7,9 @@ class GameSetup:
     def __init__(self, game_core):
         self.__game_core = game_core
         self.__vision = self.__game_core.vision
-        self.__found = 0
 
     def extract_faces(self, img):
-        current_encodings, face_images = self.__vision.extract_faces(img)
+        tmp, current_encodings, face_images = self.__vision.extract_faces(img)
 
         # Check if there is minimum count of participants.
         if len(current_encodings) < self.__game_core.minimum_participants:
@@ -26,14 +23,11 @@ class GameSetup:
     def ask_for_names(self):
         p_num = 0
 
-        # Tells it's the first time waiting for the same person to talk.
-        first_time = True
-
         # Pick a participant who wasn't asked for a name yet.
         p = self.__game_core.get_participant_from_name(None)
         while p:
             p_num += 1
-            self.__game_core.show_mic_icon(0)
+            self.__game_core.show_icon(toggle=False)
             self.__game_core.display_face(p.get_picture())
             self.__game_core.set_spoken_name("Participant #" + str(p_num) + " Name")
             self.listen_participant_name(p)
@@ -52,13 +46,13 @@ class GameSetup:
     def listen_participant_name(self, participant):
         # A small delay before recording voice.
         time.sleep(2)
-        self.__game_core.show_mic_icon()
+        self.__game_core.show_icon()
         self.__game_core.recognize_speech()
         while not self.__game_core.recognizing_finished():
             time.sleep(0.5)
             self.__game_core.set_spoken_name(self.__game_core.recognized_text())
 
-        self.__game_core.show_mic_icon(False)
+        self.__game_core.show_icon(toggle=False)
 
         speaker_text = self.__game_core.recognized_text()
 

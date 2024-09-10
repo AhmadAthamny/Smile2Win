@@ -36,6 +36,7 @@ class Participant:
 class ParticipantsList:
     def __init__(self):
         self.__participants_list = []
+        self.__face_encodings = []
 
     def add_participant(self, name, faceid, image):
         new_p = Participant()
@@ -44,6 +45,7 @@ class ParticipantsList:
         new_p.set_name(name)
 
         self.__participants_list.append(new_p)
+        self.__face_encodings.append(faceid)
 
     def get_participant_from_name(self, name):
         for p in self.__participants_list:
@@ -61,10 +63,23 @@ class ParticipantsList:
         self.__participants_list.sort(key=lambda e: e.get_points())
 
     def remove_participant(self, participant):
-        self.__participants_list.remove(participant)
+        try:
+            p_index = self.__participants_list.index(participant)
+            self.__participants_list.remove(participant)
+            self.__face_encodings.pop(p_index)
+        except:
+            # participant not in list.
+            pass
 
     def remove_all_participants(self):
         self.__participants_list = []
+        self.__face_encodings = []
 
     def get_participants_count(self):
         return len(self.__participants_list)
+    
+    def get_participants_encodings(self):
+        return self.__participants_list, self.__face_encodings
+    
+    def get_all_participants(self):
+        return self.__participants_list

@@ -2,6 +2,7 @@ import threading
 from GUI import MainGUI
 from Participant import Participant, ParticipantsList
 from GameSetup import *
+from GamePlay import *
 import speech_text
 import vision
 
@@ -14,6 +15,7 @@ class GameCore:
         self.__speech_recognizer = speech_text.SpeechTexter()
         self.vision = vision.Vision(MAXIMUM_PLAYERS)
         self.__game_setup = GameSetup(self)
+        self.__game_play = GamePlay(self)
         self.minimum_participants = min_participants
 
     def start_game(self):
@@ -51,6 +53,8 @@ class GameCore:
         # If name collecting was successful, we then need to know what's the game concept:
         self.__Main_GUI.end_names_setup()
 
+    def start_playing_game(self):
+        self.__game_play.start_game()
 
     # This function is used by the GameSetup module.
     def display_face(self, img):
@@ -61,8 +65,11 @@ class GameCore:
         self.__Main_GUI.set_spoken_name(spoken_name)
 
     # This function is used by the GameSetup module.
-    def show_mic_icon(self, toggle=True):
-        self.__Main_GUI.start_listening_names(toggle)
+    def show_icon(self, stage=0, toggle=True, mic_icon=True):
+        if stage == 0:
+            self.__Main_GUI.start_listening_names(toggle)
+        else:
+            self.__Main_GUI.toggle_icon(stage, toggle, mic_icon)
 
     # This function is used by the GameSetup module.
     # It creates a new participant instance and adds it to the participants list of the game.
@@ -78,6 +85,10 @@ class GameCore:
     # Returns the count of the participants we have in the game.
     def participants_count(self):
         return self.__participants.get_participants_count()
+    
+    # Returns list of participants
+    def get_all_participants(self):
+        return self.__participants.get_all_participants()
 
     def recognize_speech(self):
         self.__speech_recognizer.run_recognizer()
@@ -87,6 +98,27 @@ class GameCore:
 
     def recognized_text(self):
         return self.__speech_recognizer.recognized_text()
+    
+    def inspect_participants_hands(self):
+        img = self.__Main_GUI.take_shot()
+        participants, encodings = self.__participants.get_participants_encodings()
+        
+        result = self.vision.find_next_turn(img, encodings)
+
+        raising_hands = []
+        for index in result:
+            raising_hands.append(participants[index])
+
+        return raising_hands
+        
+    def set_bot_text(self, header, text):
+        self.__Main_GUI.update_bot_text(header, text)
+
+    def update_participants_cards(self, cards):
+        self.__Main_GUI.update_participants_cards(cards)
+
+    def insert_player_text(self, text, replace=False):
+        self.__Main_GUI.insert_player_text(text, replace)
 
     def end_game(self):
         self.__speech_recognizer.stop_recognizer()
