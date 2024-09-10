@@ -22,8 +22,7 @@ class GamePlay:
         self.__ask_questions()
 
         # Ending game
-        winner_name = self.__get_winner_name()
-        self.__core.set_bot_text("Winner", f"The game has ended, and the winner is:\n{winner_name}")
+        self.__announce_winner()
 
 
     def __ask_concept(self):
@@ -32,7 +31,7 @@ class GamePlay:
         self.__core.recognize_speech()
 
         res = ""
-        self.__core.insert_player_text("\n\nConcept suggestion:\n")
+        self.__core.insert_player_text("\nConcept suggestion:\n")
         while not self.__core.recognizing_finished():
             time.sleep(0.5)
             res = self.__core.recognized_text()
@@ -49,6 +48,7 @@ class GamePlay:
             # here we need to try again
             self.__core.set_bot_text("Concept", "Sorry, can you try again?")
             time.sleep(2)
+            self.__core.insert_player_text("\n\n")
             self.__ask_concept()
         else:
             # we have questions, lets parse them.
@@ -58,7 +58,7 @@ class GamePlay:
     def __ask_questions(self):
         while self.__current_question < len(self.__questions_list):
             question = self.__questions_list[self.__current_question]
-            self.__core.set_bot_text("Question", question)
+            self.__core.set_bot_text(f"Question {self.__current_question+1}", question)
 
             # Wait 2 seconds before inspecting hands
             time.sleep(2)
@@ -88,13 +88,18 @@ class GamePlay:
             # Now, check answer correctness.
             correctness = check_correct_answer(question, res)
 
-            if correctness <= 5: # bad answer is equal or less than 5/10
-                self.__core.set_bot_text("Question", "Good try, question still not answered.")
+            if correctness == -1: # means we are passing
+                self.__core.set_bot_text(f"Question {self.__current_question+1}", "Pass. Moving to next one.")
+                self.__current_question += 1
+                time.sleep(2.5)
+
+            elif correctness <= 5: # bad answer is equal or less than 5/10
+                self.__core.set_bot_text(f"Question {self.__current_question+1}", "Good try, question still not answered.")
 
                 # We loop again to ask the same question.
             else:
                 # Good answer
-                self.__core.set_bot_text("Question", f"Good answer {chosen_participant.get_name()}, {correctness}/10.")
+                self.__core.set_bot_text(f"Question {self.__current_question+1}", f"Good answer {chosen_participant.get_name()}, {correctness}/10.")
                 
                 # Give points
                 chosen_participant.give_points(correctness)
@@ -120,9 +125,17 @@ class GamePlay:
         sorted_cards = sorted(cards_data, key=lambda x: x[2], reverse=True)
         self.__core.update_participants_cards(sorted_cards)
 
-    def __get_winner_name(self):
+    def __get_winners(self):
         participants = self.__core.get_all_participants()
 
-        winner = max(participants, key=lambda p: p.get_points())
-
-        return winner.get_name()
+        highest_scorer = max(participants, key=lambda p: p.get_points())
+        winners = [p.get_name() for p in participants if p.get_points() == highest_scorer.get_points()]
+        return winners
+        
+    def __announce_winner(self):
+        winner_names = self.__get_winners()
+        if len(winner_names) == 1:
+            self.__core.set_bot_text("Winner", f"The game has ended, and the winner is:\n{winner_names[0]}")
+        else:
+            self.__core.set_bot_text("Winner", f"The game has ended, with a tie, winners are:\n{", ".join(winner_names)}")
+            
