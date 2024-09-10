@@ -1,10 +1,14 @@
 from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-OPENAI_KEY = "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"
+# Load environment variables from .env file
+# We have to do this because we're in a different thread than Smile2Win.
+load_dotenv()
 
 # Initialize the OpenAI client with the API key
 client = OpenAI(
-    api_key=OPENAI_KEY,
+    api_key=os.getenv('OPENAI_API_KEY')
 )
 
 def parse_name_from_text(text):
