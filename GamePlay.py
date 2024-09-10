@@ -7,6 +7,7 @@ class GamePlay:
         self.__core = core
         self.__current_question = 0
         self.__questions_list = []
+        self.__speaker_participant = None
 
     def start_game(self):
         # We need the cards to be up-to-date.
@@ -28,8 +29,8 @@ class GamePlay:
     def __ask_concept(self):
         self.__core.set_bot_text("Concept", "Suggest a concept for the game, including number of questions if you want.")
 
+        self.__core.show_icon(1, True)
         self.__core.recognize_speech()
-
         res = ""
         self.__core.insert_player_text("\nConcept suggestion:\n")
         while not self.__core.recognizing_finished():
@@ -41,6 +42,7 @@ class GamePlay:
 
         # Once listening is done, update the text with the interpreted speech. 
         res = self.__core.recognized_text()
+        self.__core.show_icon(1, False)
 
         # Now, give the recognized text to intellegent boy.
         response = parse_concept_from_text(res)
@@ -63,24 +65,36 @@ class GamePlay:
             # Wait 2 seconds before inspecting hands
             time.sleep(2)
 
+            self.__core.show_icon(1, True, False)
             # Inspect hands.
             raising_hands = []
             while not raising_hands:
                 # This is a list of participants (Participant instance)
                 raising_hands = self.__core.inspect_participants_hands()
                 time.sleep(0.2)
-            
+                
+            # toggle of hands icon
+            self.__core.show_icon(1, False, False)
             # We got participants raising hands, lets choose one randomly.
             chosen_participant = random.choice(raising_hands)
+            self.__speaker_participant = chosen_participant
+            self.__generate_cards_data()
 
             # Now, we need an answer
             res = ""
+            self.__core.show_icon(1, True)
             self.__core.recognize_speech()
             self.__core.insert_player_text(f"\n\n{chosen_participant.get_name()}:\n")
             while not self.__core.recognizing_finished():
                 time.sleep(0.5)
                 res = self.__core.recognized_text()
                 self.__core.insert_player_text(res, True)
+
+            # Hide mic icon
+            self.__core.show_icon(1, False)
+            # Toggle of speaker participant.
+            self.__speaker_participant = None
+            self.__generate_cards_data()
             
             # Get response after interpreting.
             res = self.__core.recognized_text()
@@ -119,7 +133,8 @@ class GamePlay:
 
         cards_data = []
         for p in participants:
-            card = (p.get_picture(), p.get_name(), p.get_points())
+            is_speaker = p == self.__speaker_participant
+            card = (p.get_picture(), p.get_name(), p.get_points(), is_speaker)
             cards_data.append(card)
 
         sorted_cards = sorted(cards_data, key=lambda x: x[2], reverse=True)
