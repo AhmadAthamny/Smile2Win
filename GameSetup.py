@@ -27,7 +27,7 @@ class GameSetup:
         p = self.__game_core.get_participant_from_name(None)
         while p:
             p_num += 1
-            self.__game_core.show_mic_icon(0)
+            self.__game_core.show_icon(toggle=False)
             self.__game_core.display_face(p.get_picture())
             self.__game_core.set_spoken_name("Participant #" + str(p_num) + " Name")
             self.listen_participant_name(p)
@@ -46,13 +46,13 @@ class GameSetup:
     def listen_participant_name(self, participant):
         # A small delay before recording voice.
         time.sleep(2)
-        self.__game_core.show_mic_icon()
+        self.__game_core.show_icon()
         self.__game_core.recognize_speech()
         while not self.__game_core.recognizing_finished():
             time.sleep(0.5)
             self.__game_core.set_spoken_name(self.__game_core.recognized_text())
 
-        self.__game_core.show_mic_icon(False)
+        self.__game_core.show_icon(toggle=False)
 
         speaker_text = self.__game_core.recognized_text()
 

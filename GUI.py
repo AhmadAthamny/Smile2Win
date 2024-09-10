@@ -105,14 +105,16 @@ class MainGUI:
         self.__participant_name = tk.Label(self.__root, font=("Arial Rounded MT Bold", 30), text="",
                                            bg=MAIN_WINDOW_COLOR, fg="white")
 
-        tmp_image = Image.open("Resources/recording_mic.png")
+        tmp_image = Image.open("Resources/recording_mic.jpg")
         self.__mic_icon_img = ImageTk.PhotoImage(tmp_image)
-        self.__mic_icon_id = tk.Label(self.__root, image=self.__mic_icon_img)
+        self.__mic_icon_id = tk.Label(self.__root, image=self.__mic_icon_img,
+                                      highlightthickness=0, bd=0)
+        
+        n_tmp_image = Image.open("Resources/raising_hands.jpg")
+        self.__raising_hands_img = ImageTk.PhotoImage(n_tmp_image)
+        self.__raising_hands_id = tk.Label(self.__root, image=self.__raising_hands_img,
+                                      highlightthickness=0, bd=0)
 
-        tmp_image_2 = Image.open("Resources/v_icon.png")
-        self.__done_icon_img = ImageTk.PhotoImage(tmp_image_2)
-        self.__done_icon_id = self.__face_setup_canvas.create_image(230, 60, anchor=tk.NW, image=self.__done_icon_img,
-                                                                    state="hidden")
         self.__participant_name.pack(pady=(50, 0))
 
     def end_names_setup(self):
@@ -128,20 +130,35 @@ class MainGUI:
         This function is called everytime a participant wants to say his name.
         """
         if toggle == 1:
-            x_cord = (WINDOW_WIDTH - 170) // 2 + 300
-            y_cord = 390
-            self.__mic_icon_id.place(x=x_cord, y=y_cord)
+            self.toggle_icon()
             self.__face_setup_canvas.configure(highlightbackground="red")
 
         elif toggle == 0:
-            if self.__mic_icon_id.winfo_viewable:
-                self.__mic_icon_id.place_forget()
-                self.__face_setup_canvas.configure(highlightbackground="white")
+            self.toggle_icon(toggle=False)
+            self.__face_setup_canvas.configure(highlightbackground="white")
 
-        elif toggle == 2:
-            self.__face_setup_canvas.itemconfigure(self.__mic_icon_id, state='hidden')
-            self.__face_setup_canvas.configure(highlightbackground="#32db2c")
-            self.__face_setup_canvas.itemconfigure(self.__done_icon_id, state='normal')
+    def toggle_icon(self, stage=0, toggle=True, mic=True):
+            """
+            stage: 0 for GameSetup, 1 for GamePlay.
+            toggle: True to show, False to hide.
+            """
+            if stage == 0:
+                x_cord = (WINDOW_WIDTH - 170) // 2 + 300
+                y_cord = 390
+            elif stage == 1:
+                x_cord = self.__game_header.winfo_x() + self.__game_header.winfo_width() + 40
+                y_cord = self.__game_header.winfo_y() + self.__game_header.winfo_height()//2 - 40
+
+            if toggle:
+                if mic:
+                    self.__mic_icon_id.place(x=x_cord, y=y_cord)
+                else:
+                    self.__raising_hands_id.place(x=x_cord, y=y_cord)
+            elif self.__mic_icon_id.winfo_viewable:
+                if mic:
+                    self.__mic_icon_id.place_forget()
+                else:
+                    self.__raising_hands_id.place_forget()
 
     def update_welcome_statement(self, scene=0, txt=None):
         if scene == 0:
@@ -241,8 +258,8 @@ class MainGUI:
         pos_x = 315
         pos_y = self.__camera.winfo_height() + self.__camera.winfo_y()
         for p_info in participants_info:
-            image, name, score = p_info
-            card = self.__build_single_card(image, name, str(score))
+            image, name, score, speaker = p_info
+            card = self.__build_single_card(image, name, str(score), speaker)
             tk_image = ImageTk.PhotoImage(card)
     
             # Store a reference to the image to avoid garbage collection (otherwise it won't show)
@@ -255,10 +272,11 @@ class MainGUI:
 
             self.__player_cards.append(card)
 
-    def __build_single_card(self, image, name, score):
+    def __build_single_card(self, image, name, score, speaker):
         """Creates a new card with the specified image, name, and score."""
         # Create a blank card using the predefined macros
-        card = Image.new("RGB", (CARD_WIDTH, CARD_HEIGHT), CARD_NORMAL_BG)
+        card_bg = CARD_NORMAL_BG if not speaker else CARD_SPEAKER_BG
+        card = Image.new("RGB", (CARD_WIDTH, CARD_HEIGHT), card_bg)
         draw = ImageDraw.Draw(card)
 
         # Image coming from the cv2, make it RGB.

@@ -41,17 +41,22 @@ class Vision:
 
         return face_locations, current_encodings, face_images
 
-    def __find_face_from_collection(self, collection_encodings, target_encoding):
+    def __find_face_from_collection(self, collection_encodings: list, target_encoding: np.ndarray, tolerance: float = 0.8) -> int:
         """
-        Compare a target face encoding against a collection of known encodings.
-        Returns the index of the matching face or -1 if no match is found.
+        Compare a target face encoding against a collection of known encodings using face distance.
+        Returns the index of the closest matching face or -1 if no match is found.
         """
-        matches = face_recognition.compare_faces(collection_encodings, target_encoding)
+        # Compute face distances between the target encoding and all known encodings
+        distances = face_recognition.face_distance(collection_encodings, target_encoding)
 
-        for i, match in enumerate(matches):
-            if match:
-                return i
-        return -1  # No match found
+        # Find the index of the closest face by distance
+        best_match_index = np.argmin(distances)
+
+        # Check if the closest face is within the tolerance range
+        if distances[best_match_index] <= tolerance:
+            return best_match_index
+        else:
+            return -1  # No match found within the tolerance
 
     def __is_open_palm(self, hand_landmarks):
         """
@@ -99,34 +104,44 @@ class Vision:
         """
         return np.linalg.norm(np.array(point1) - np.array(point2))
 
-    def find_next_turn(self, source_image, players_encodings):
+    def find_next_turn(self, source_image: np.ndarray, players_encodings: list) -> list:
         """
         Given a source image, find which player raised their hand first by detecting
         hand positions and matching faces.
+        
+        Args:
+            source_image (np.ndarray): The input image from the camera feed.
+            players_encodings (list): List of known player face encodings.
+        
+        Returns:
+            list: Indices of the players with their hand raised, based on proximity to face and hand position.
         """
+        # Flip the image horizontally for a more natural camera view
         frame = cv2.flip(source_image, 1)
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Extract faces from the image
-        face_locations, current_encodings, tmp = self.extract_faces(source_image)
+        face_locations, current_encodings, _ = self.extract_faces(source_image)
 
         # Process the image to detect hands
         results = self.hands.process(rgb_frame)
 
-        # List of faces with hands raised
+        # List of player indices with raised hands
         faces_with_hand = []
 
-        # If hands are found
+        # If hands are detected
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
+                # Check if the hand is an open palm (signal for raised hand)
                 if self.__is_open_palm(hand_landmarks):
+                    # Get the wrist coordinates as the hand center
                     hand_center = (hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].x,
-                                   hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].y)
+                                hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].y)
 
                     closest_face_index = -1
                     min_distance = float('inf')
 
-                    # Loop over detected faces and compare proximity to the hand
+                    # Loop over detected faces to find the closest one to the raised hand
                     for i, (top, right, bottom, left) in enumerate(face_locations):
                         # Calculate the center of the face
                         face_center = ((left + right) / 2, (top + bottom) / 2)
@@ -139,8 +154,9 @@ class Vision:
                             min_distance = distance
                             closest_face_index = i
 
-                    # If a face is close enough, check if we know it.
-                    if closest_face_index != -1:
+                    # If a close face is found, check if it matches a known player encoding
+                    if closest_face_index != -1 and closest_face_index < len(current_encodings):
+                        # Use face distance to find the closest match
                         found_face = self.__find_face_from_collection(players_encodings, current_encodings[closest_face_index])
                         if found_face != -1:
                             faces_with_hand.append(found_face)

@@ -65,8 +65,11 @@ class GameCore:
         self.__Main_GUI.set_spoken_name(spoken_name)
 
     # This function is used by the GameSetup module.
-    def show_mic_icon(self, toggle=True):
-        self.__Main_GUI.start_listening_names(toggle)
+    def show_icon(self, stage=0, toggle=True, mic_icon=True):
+        if stage == 0:
+            self.__Main_GUI.start_listening_names(toggle)
+        else:
+            self.__Main_GUI.toggle_icon(stage, toggle, mic_icon)
 
     # This function is used by the GameSetup module.
     # It creates a new participant instance and adds it to the participants list of the game.
@@ -103,8 +106,8 @@ class GameCore:
         result = self.vision.find_next_turn(img, encodings)
 
         raising_hands = []
-        for i in range(len(result)):
-            raising_hands.append(participants[i])
+        for index in result:
+            raising_hands.append(participants[index])
 
         return raising_hands
         
