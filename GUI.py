@@ -163,7 +163,7 @@ class MainGUI:
     def update_welcome_statement(self, scene=0, txt=None):
         if scene == 0:
             self.__welcome_statement = "Let's get to know you first! :)"
-            self.__root.after(1, lambda: self.update_welcome_statement(scene + 1))
+            self.__root.after(2000, lambda: self.update_welcome_statement(scene + 1))
 
         elif scene == 1:
             self.__welcome_statement = "We are taking a picture for you\n" \
