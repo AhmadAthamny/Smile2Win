@@ -38,7 +38,8 @@ class GamePlay:
             res = self.__core.recognized_text()
 
             # Update the GUI to display the player's text.
-            self.__core.insert_player_text(res, True)
+            if res:
+                self.__core.insert_player_text(res, True)
 
         # Once listening is done, update the text with the interpreted speech. 
         res = self.__core.recognized_text()
@@ -88,7 +89,8 @@ class GamePlay:
             while not self.__core.recognizing_finished():
                 time.sleep(0.5)
                 res = self.__core.recognized_text()
-                self.__core.insert_player_text(res, True)
+                if res:
+                    self.__core.insert_player_text(res, True)
 
             # Hide mic icon
             self.__core.show_icon(1, False)
