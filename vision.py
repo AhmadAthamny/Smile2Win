@@ -28,16 +28,14 @@ class Vision:
         face_images = []
         for (top, right, bottom, left) in face_locations:
             # Extract the face from the original image
-
             top = max(0, top - int((bottom - top) * 0.7))
-            bottom = min(source_image.shape[0], bottom + int((bottom - top)*0.2))
-            left = max(0, left - int((right-left)*0.2))
-            right = min(source_image.shape[1], right + int((right-left)*0.2))
+            bottom = min(source_image.shape[0], bottom + int((bottom - top) * 0.2))
+            left = max(0, left - int((right-left) * 0.2))
+            right = min(source_image.shape[1], right + int((right-left) * 0.2))
 
             # Extract the face with padding from the original image
             face_image = source_image[top:bottom, left:right]
             face_images.append(face_image)  # Append the cropped face image to the list
-
 
         return face_locations, current_encodings, face_images
 
@@ -120,8 +118,10 @@ class Vision:
         frame = cv2.flip(source_image, 1)
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Extract faces from the image
-        face_locations, current_encodings, _ = self.extract_faces(source_image)
+        frame_height, frame_width, _ = frame.shape
+
+        # Extract faces from the flipped image (frame)
+        face_locations, current_encodings, _ = self.extract_faces(frame)
 
         # Process the image to detect hands
         results = self.hands.process(rgb_frame)
@@ -137,6 +137,7 @@ class Vision:
                     # Get the wrist coordinates as the hand center
                     hand_center = (hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].x,
                                 hand_landmarks.landmark[mp.solutions.hands.HandLandmark.WRIST].y)
+                    hand_center = hand_center[0] * frame_width, hand_center[1] * frame_height
 
                     closest_face_index = -1
                     min_distance = float('inf')
@@ -148,12 +149,11 @@ class Vision:
 
                         # Calculate the distance between the hand center and the face center
                         distance = self.__calculate_distance(hand_center, face_center)
-
                         # Track the closest face to the hand
                         if distance < min_distance:
                             min_distance = distance
                             closest_face_index = i
-
+                        
                     # If a close face is found, check if it matches a known player encoding
                     if closest_face_index != -1 and closest_face_index < len(current_encodings):
                         # Use face distance to find the closest match
@@ -162,4 +162,3 @@ class Vision:
                             faces_with_hand.append(found_face)
 
         return faces_with_hand
-    
