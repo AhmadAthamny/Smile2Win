@@ -82,18 +82,6 @@ class Vision:
                 is_open = False
                 break
 
-        # Check if fingers are spread
-        if is_open:
-            index_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.INDEX_FINGER_TIP]
-            middle_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.MIDDLE_FINGER_TIP]
-            ring_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.RING_FINGER_TIP]
-            pinky_tip = hand_landmarks.landmark[mp.solutions.hands.HandLandmark.PINKY_TIP]
-
-            if (np.linalg.norm(np.array([index_tip.x, index_tip.y]) - np.array([middle_tip.x, middle_tip.y])) < 0.05 or
-                np.linalg.norm(np.array([middle_tip.x, middle_tip.y]) - np.array([ring_tip.x, ring_tip.y])) < 0.05 or
-                np.linalg.norm(np.array([ring_tip.x, ring_tip.y]) - np.array([pinky_tip.x, pinky_tip.y])) < 0.05):
-                is_open = False
-
         return is_open
 
     def __calculate_distance(self, point1, point2):
@@ -153,11 +141,11 @@ class Vision:
                         if distance < min_distance:
                             min_distance = distance
                             closest_face_index = i
-                        
                     # If a close face is found, check if it matches a known player encoding
                     if closest_face_index != -1 and closest_face_index < len(current_encodings):
                         # Use face distance to find the closest match
                         found_face = self.__find_face_from_collection(players_encodings, current_encodings[closest_face_index])
+                        
                         if found_face != -1:
                             faces_with_hand.append(found_face)
 
