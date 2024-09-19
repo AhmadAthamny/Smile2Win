@@ -25,7 +25,7 @@ Whenever someone answers, they get points. At the end of the game, the winners a
 4. face_recognition was used to recognize and encode faces.
 5. OpenAI ChatGPT 3.5-turbo to understand recognized speech and to manage the game.
 
-<h2>Installation</h2>
+<h2>Installation & Running</h2>
 
 1. Run the following command to install the required packages.
 
@@ -38,3 +38,4 @@ OPENAI_API_KEY= # OpenAI Key for ChatGPT.
 AZURE_SPEECH_KEY= # Azure Speech Recognition
 AZURE_REGION= # Azure Service Region 
 ```
+3. Then, run **Smile2Win.py** file to start the game, enjoy! :)
